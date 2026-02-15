@@ -20,7 +20,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         {/* Logo – gradient box + logo image + 3D PRINT / with Sruthi */}
         <Link href="/" className="flex items-center space-x-3 group shrink-0" prefetch>
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 overflow-hidden p-1">
+          <div className="w-12 h-12 rounded-2xl from-indigo-500 to-purple-500 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 overflow-hidden p-1">
             <Image
               src="/logo.png"
               alt="3D Print with Sruthi"
