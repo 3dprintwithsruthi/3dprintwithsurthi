@@ -6,6 +6,9 @@ import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { CheckoutForm } from "./checkout-form";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CheckoutPage() {
   const session = await getSession();
   if (!session) redirect("/login?callbackUrl=/checkout");

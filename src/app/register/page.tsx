@@ -5,6 +5,9 @@ import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "./register-form";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function RegisterPage() {
   const session = await getSession();
   if (session) redirect("/");
