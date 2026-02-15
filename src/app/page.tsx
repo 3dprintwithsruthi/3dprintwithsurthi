@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { Sparkles, ArrowRight, FileCheck, TrendingUp, Shield } from "lucide-react";
+import type { Product } from "@prisma/client";
 
 const FEATURED_TAKE = 6;
 
@@ -15,14 +16,25 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [featured, totalProducts] = await Promise.all([
-    prisma.product.findMany({
-      take: FEATURED_TAKE,
-      orderBy: { createdAt: "desc" },
-      where: { stock: { gt: 0 } },
-    }),
-    prisma.product.count({ where: { stock: { gt: 0 } } }),
-  ]);
+  let featured: Product[] = [];
+  let totalProducts: number = 0;
+  let dbError: boolean = false;
+
+  try {
+    const [f, t] = await Promise.all([
+      prisma.product.findMany({
+        take: FEATURED_TAKE,
+        orderBy: { createdAt: "desc" },
+        where: { stock: { gt: 0 } },
+      }),
+      prisma.product.count({ where: { stock: { gt: 0 } } }),
+    ]);
+    featured = f;
+    totalProducts = t;
+  } catch (err) {
+    console.error("Failed to fetch featured products:", err);
+    dbError = true;
+  }
 
   const heroImages = featured.slice(0, 4).map((p) => p.images[0]).filter(Boolean);
 
@@ -135,41 +147,51 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
           <p className="mt-2 text-gray-600">Handpicked items just for you</p>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((product) => (
-              <Link key={product.id} href={`/products/${product.id}`} prefetch className="group">
-                <article className="card-rounded overflow-hidden transition hover:shadow-2xl">
-                  <div className="relative aspect-square bg-gray-100">
-                    {product.images[0] ? (
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition group-hover:scale-105"
-                        sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-gray-400">No image</div>
-                    )}
-                    {product.stock < 10 && product.stock > 0 && (
-                      <span className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs text-white">
-                        Low stock
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                    <p className="mt-1 text-indigo-600 font-medium">{formatPrice(product.price)}</p>
-                    {product.stock === 0 && (
-                      <p className="mt-1 text-sm text-red-600">Out of stock</p>
-                    )}
-                  </div>
-                </article>
-              </Link>
-            ))}
-          </div>
-          {featured.length === 0 && (
-            <p className="py-12 text-center text-gray-500">No products yet. Check back soon!</p>
+          {dbError ? (
+            <div className="mt-8 rounded-lg bg-amber-50 p-6 text-center">
+              <p className="text-amber-800">
+                Database temporarily unavailable. Please try again in a moment.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {featured.map((product) => (
+                  <Link key={product.id} href={`/products/${product.id}`} prefetch className="group">
+                    <article className="card-rounded overflow-hidden transition hover:shadow-2xl">
+                      <div className="relative aspect-square bg-gray-100">
+                        {product.images[0] ? (
+                          <Image
+                            src={product.images[0]}
+                            alt={product.name}
+                            fill
+                            className="object-cover transition group-hover:scale-105"
+                            sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-gray-400">No image</div>
+                        )}
+                        {product.stock < 10 && product.stock > 0 && (
+                          <span className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs text-white">
+                            Low stock
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-900">{product.name}</h3>
+                        <p className="mt-1 text-indigo-600 font-medium">{formatPrice(product.price)}</p>
+                        {product.stock === 0 && (
+                          <p className="mt-1 text-sm text-red-600">Out of stock</p>
+                        )}
+                      </div>
+                    </article>
+                  </Link>
+                ))}
+              </div>
+              {featured.length === 0 && (
+                <p className="py-12 text-center text-gray-500">No products yet. Check back soon!</p>
+              )}
+            </>
           )}
           <div className="mt-10 text-center">
             <Button asChild size="lg" className="rounded-xl">

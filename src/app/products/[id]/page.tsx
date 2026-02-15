@@ -5,16 +5,23 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 import { formatPrice } from "@/lib/utils";
 import type { CustomFieldDef } from "@/types";
 import { AddToCartSection } from "./add-to-cart-section";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  let product = null;
+
+  try {
+    product = await prisma.product.findUnique({ where: { id } });
+  } catch (err) {
+    console.error("Failed to fetch product:", err);
+  }
+
   if (!product) notFound();
 
   const customFields = (product.customFields as CustomFieldDef[] | null) ?? [];

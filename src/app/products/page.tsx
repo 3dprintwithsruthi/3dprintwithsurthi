@@ -6,6 +6,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import type { Product } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -43,15 +44,26 @@ export default async function ProductsPage({
         ? { price: "desc" as const }
         : { createdAt: "desc" as const };
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy,
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.product.count({ where }),
-  ]);
+  let products: Product[] = [];
+  let total: number = 0;
+  let dbError: boolean = false;
+
+  try {
+    const [p, t] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+      }),
+      prisma.product.count({ where }),
+    ]);
+    products = p;
+    total = t;
+  } catch (err) {
+    console.error("Failed to fetch products:", err);
+    dbError = true;
+  }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -92,52 +104,61 @@ export default async function ProductsPage({
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product) => (
-          <Link key={product.id} href={`/products/${product.id}`}>
-            <article className="card-rounded overflow-hidden transition hover:shadow-2xl group">
-              <div className="relative aspect-square bg-gray-100">
-                {product.images[0] ? (
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
-                  />
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center text-gray-400">
-                    <span className="text-sm">No Image</span>
-                    <svg className="mt-1 h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
+        {dbError ? (
+          <div className="col-span-full rounded-lg bg-amber-50 p-8 text-center">
+            <p className="text-amber-800">
+              Database temporarily unavailable. Please try again in a moment.
+            </p>
+          </div>
+        ) : (
+          <>
+            {products.map((product) => (
+              <Link key={product.id} href={`/products/${product.id}`}>
+                <article className="card-rounded overflow-hidden transition hover:shadow-2xl group">
+                  <div className="relative aspect-square bg-gray-100">
+                    {product.images[0] ? (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center text-gray-400">
+                        <span className="text-sm">No Image</span>
+                        <svg className="mt-1 h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                      </div>
+                    )}
+                    {product.stock < 10 && product.stock > 0 && (
+                      <span className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs text-white">
+                        Low stock
+                      </span>
+                    )}
                   </div>
-                )}
-                {product.stock < 10 && product.stock > 0 && (
-                  <span className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs text-white">
-                    Low stock
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-2 p-4">
-                <div>
-                  <h2 className="font-semibold text-gray-900">{product.name}</h2>
-                  <p className="mt-1 text-indigo-600 font-medium">{formatPrice(product.price)}</p>
-                </div>
-                <span className="text-gray-400 group-hover:text-indigo-600">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-              {product.stock === 0 && <p className="px-4 pb-4 text-sm text-red-600">Out of stock</p>}
-            </article>
-          </Link>
-        ))}
+                  <div className="flex items-center justify-between gap-2 p-4">
+                    <div>
+                      <h2 className="font-semibold text-gray-900">{product.name}</h2>
+                      <p className="mt-1 text-indigo-600 font-medium">{formatPrice(product.price)}</p>
+                    </div>
+                    <span className="text-gray-400 group-hover:text-indigo-600">
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </div>
+                  {product.stock === 0 && <p className="px-4 pb-4 text-sm text-red-600">Out of stock</p>}
+                </article>
+              </Link>
+            ))}
+            {products.length === 0 && (
+              <p className="col-span-full py-12 text-center text-gray-500">No products found.</p>
+            )}
+          </>
+        )}
       </div>
-
-      {products.length === 0 && (
-        <p className="py-12 text-center text-gray-500">No products found.</p>
-      )}
 
       {totalPages > 1 && (
         <div className="mt-8 flex justify-center gap-2">
