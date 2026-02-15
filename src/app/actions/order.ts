@@ -65,7 +65,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     return { success: false, error: "Invalid cart" };
   }
 
-  const productIds = [...new Set(cart.map((c) => c.productId))];
+  const productIds = Array.from(new Set(cart.map((c) => c.productId)));
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, stock: true, name: true, price: true },

@@ -6,9 +6,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Format price for display */
-export function formatPrice(amount: number | string): string {
-  const n = typeof amount === "string" ? parseFloat(amount) : amount;
+/** Format price for display (accepts number, string, or Prisma Decimal) */
+export function formatPrice(amount: number | string | unknown): string {
+  const n = decimalToNumber(amount);
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",

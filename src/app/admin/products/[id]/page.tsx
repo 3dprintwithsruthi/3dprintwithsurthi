@@ -26,7 +26,7 @@ export default async function EditProductPage({
           stock: product.stock,
           images: product.images,
           videoUrl: product.videoUrl ?? "",
-          customFields: (product.customFields as Array<{ key: string; label: string; type: string; required?: boolean; placeholder?: string }>) ?? [],
+          customFields: ((product.customFields as unknown) as import("@/types").CustomFieldDef[]) ?? [],
         }}
       />
     </div>

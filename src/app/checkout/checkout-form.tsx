@@ -48,7 +48,7 @@ export function CheckoutForm() {
     const formData = new FormData();
     formData.set("fullName", data.fullName);
     formData.set("addressLine1", data.addressLine1);
-    formData.set("addressLine2", data.addressLine2);
+    formData.set("addressLine2", data.addressLine2 ?? "");
     formData.set("city", data.city);
     formData.set("state", data.state);
     formData.set("pincode", data.pincode);
