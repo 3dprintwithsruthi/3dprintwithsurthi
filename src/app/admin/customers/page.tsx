@@ -4,6 +4,9 @@
 import { prisma } from "@/lib/db";
 import { Mail, Phone, Calendar, ShoppingBag } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminCustomersPage() {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

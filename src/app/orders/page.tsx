@@ -3,6 +3,8 @@
  */
 import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";

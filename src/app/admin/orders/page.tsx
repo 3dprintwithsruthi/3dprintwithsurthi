@@ -3,6 +3,9 @@
  */
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { OrderStatusSelect } from "./order-status-select";
 
 export default async function AdminOrdersPage() {

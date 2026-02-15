@@ -3,6 +3,9 @@
  */
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { formatPrice } from "@/lib/utils";
 import { Package, Users, ShoppingBag, IndianRupee, Plus, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";

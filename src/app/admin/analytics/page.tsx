@@ -6,6 +6,9 @@ import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminAnalyticsPage() {
   const [productsWithOrders, lowStock] = await Promise.all([
     prisma.product.findMany({

@@ -7,6 +7,9 @@ import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const PAGE_SIZE = 12;
 
 type SearchParams = { q?: string; sort?: string; page?: string };

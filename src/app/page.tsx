@@ -11,6 +11,9 @@ import { Sparkles, ArrowRight, FileCheck, TrendingUp, Shield } from "lucide-reac
 
 const FEATURED_TAKE = 6;
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const [featured, totalProducts] = await Promise.all([
     prisma.product.findMany({
