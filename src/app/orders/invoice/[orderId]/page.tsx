@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 import { formatPrice, decimalToNumber } from "@/lib/utils";
 import { CheckCircle } from "lucide-react";
+import { PrintButton } from "./print-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -51,20 +52,15 @@ export default async function InvoicePage({ params }: PageProps) {
     const total = decimalToNumber(order.totalAmount);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-violet-100 py-12">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-violet-100 py-12 print:bg-white">
             <div className="mx-auto max-w-4xl px-4">
                 {/* Print Button */}
-                <div className="mb-4 flex justify-end">
-                    <button
-                        onClick={() => window.print()}
-                        className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2 font-semibold text-white hover:from-indigo-700 hover:to-purple-700 print:hidden"
-                    >
-                        Print Invoice
-                    </button>
+                <div className="mb-4 flex justify-end print:hidden">
+                    <PrintButton />
                 </div>
 
                 {/* Invoice */}
-                <div className="card-rounded bg-white p-8 shadow-2xl print:shadow-none">
+                <div className="card-rounded bg-white p-8 shadow-2xl print:shadow-none print:border print:border-gray-300">
                     {/* Header */}
                     <div className="mb-8 flex items-start justify-between border-b pb-6">
                         <div>
@@ -192,22 +188,6 @@ export default async function InvoicePage({ params }: PageProps) {
                     </div>
                 </div>
             </div>
-
-            {/* Print Styles */}
-            <style jsx global>{`
-        @media print {
-          body {
-            background: white !important;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          .card-rounded {
-            box-shadow: none !important;
-            border: 1px solid #e5e7eb;
-          }
-        }
-      `}</style>
         </div>
     );
 }

@@ -236,7 +236,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
 
     // Create Cashfree payment session
     try {
-      const createOrderRequest = {
+      const createOrderRequest: any = {
         order_id: order.id,
         order_amount: Number(totalAmount.toFixed(2)),
         order_currency: "INR",
@@ -253,7 +253,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
         order_note: "3D Print Order"
       };
 
-      const response = await cashfree.PGCreateOrder("2023-08-01", createOrderRequest);
+      const response = await cashfree.PGCreateOrder(createOrderRequest as any);
       const paymentSessionId = response.data.payment_session_id;
 
       // Update order with payment session ID
