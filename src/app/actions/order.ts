@@ -238,7 +238,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     try {
       const createOrderRequest = {
         order_id: order.id,
-        order_amount: totalAmount,
+        order_amount: Number(totalAmount.toFixed(2)),
         order_currency: "INR",
         customer_details: {
           customer_id: userId,

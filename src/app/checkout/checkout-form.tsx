@@ -157,6 +157,25 @@ export function CheckoutForm() {
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4">
               <p className="text-sm font-medium text-red-800">{error}</p>
+              {error.includes("payment") && (
+                <Button
+                  type="submit"
+                  className="mt-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Retrying...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Retry Payment
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
 
