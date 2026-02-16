@@ -2,18 +2,13 @@
  * Root layout – SessionProvider, conditional navbar, cart (lazy), prefetch
  */
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
-
-const CartSidePanel = dynamic(
-  () => import("@/components/layout/cart-side-panel").then((m) => ({ default: m.CartSidePanel })),
-  { ssr: false }
-);
+import { CartSidePanelWrapper } from "@/components/layout/cart-side-panel-wrapper";
 
 export const metadata: Metadata = {
-  title: "3D Print with Sruthi – Custom 3D Printing Store",
+  title: "3DPrintwithSruthi",
   description:
     "Custom 3D printed products tailored to your needs. From prototypes to personalized gifts, we bring your imagination to life.",
   icons: {
@@ -43,7 +38,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ConditionalNavbar />
           <main className="min-h-[calc(100vh-4rem)]">{children}</main>
-          <CartSidePanel />
+          <CartSidePanelWrapper />
         </AuthSessionProvider>
       </body>
     </html>
