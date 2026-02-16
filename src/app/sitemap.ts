@@ -4,6 +4,7 @@
 import { prisma } from "@/lib/db";
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function sitemap() {
   const base = process.env.NEXTAUTH_URL ?? "https://3dprintwithsruthi.com";

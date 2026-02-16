@@ -4,13 +4,7 @@ This document covers security fixes applied to the project for production deploy
 
 ## Critical Security Fixes Applied ✅
 
-### 1. Password Hashing Implementation
-- **Files Modified**: `src/auth/config.ts`, `src/app/actions/auth.ts`
-- **Change**: All user passwords are now hashed using bcryptjs (10 rounds) before storage
-- **Impact**: User credentials are now secure; plaintext password storage vulnerability eliminated
-- **Migration**: Existing plaintext passwords in database should be reset by users on next login
-
-### 2. Image Security – Remote Patterns Restricted
+### 1. Image Security – Remote Patterns Restricted
 - **File Modified**: `next.config.js`
 - **Change**: Restricted image remotePatterns from `hostname: '**'` to specific domains:
   - `*.supabase.co` (your storage)
@@ -18,7 +12,7 @@ This document covers security fixes applied to the project for production deploy
 - **Impact**: Prevents image serving attacks and bandwidth theft
 - **Production**: Add additional domains as needed for third-party images
 
-### 3. Environment Variables – Credentials Management
+### 2. Environment Variables – Credentials Management
 - **Issue**: Sensitive credentials were hardcoded in `.env` file committed to repository
 - **Risk**: All database passwords, API secrets exposed in git history
 
@@ -84,16 +78,7 @@ Same as Vercel. Set all variables in the platform's environment configuration UI
 - [ ] Build succeeds: `npm run build`
 - [ ] No sensitive data in git log: `git log --all --oneline -- .env`
 - [ ] One test user created with email: try registering any user
-- [ ] Try login with that user to verify password hashing works
-
-## Password Migration for Existing Users
-
-Existing users with plaintext passwords in the database will need to reset their password on first login attempt:
-
-1. User tries to login with old plaintext password
-2. Login fails (password hash comparison fails)
-3. User clicks "Forgot Password" or register again
-4. Password is hashed with bcryptjs and stored securely
+- [ ] Try login with that user to verify auth works
 
 ## Additional Security Notes
 
@@ -105,6 +90,5 @@ Existing users with plaintext passwords in the database will need to reset their
 
 ## References
 
-- [bcryptjs Documentation](https://www.npmjs.com/package/bcryptjs)
 - [NextAuth Security Best Practices](https://next-auth.js.org/configuration/providers/credentials#warning-use-with-next-js-middleware)
 - [Next.js Image Optimization Security](https://nextjs.org/docs/app/api-reference/next-config-js/images#remotepatterns)

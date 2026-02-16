@@ -1,9 +1,9 @@
 /**
- * NextAuth configuration – Credentials provider with bcryptjs password hashing
+ * NextAuth configuration – Credentials provider only, session-based
+ * Password compared directly (plaintext)
  */
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
 import { prisma } from "@/lib/db";
 
 export const authOptions: NextAuthOptions = {
@@ -20,8 +20,7 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
         if (!user || !user.password) return null;
-        const isValid = await compare(credentials.password, user.password);
-        if (!isValid) return null;
+        if (credentials.password !== user.password) return null;
         return {
           id: user.id,
           name: user.name,

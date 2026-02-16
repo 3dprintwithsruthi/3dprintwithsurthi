@@ -1,10 +1,9 @@
 "use server";
 
 /**
- * Auth server actions – register with bcryptjs password hashing
- * Login uses client-side signIn from next-auth/react
+ * Auth server actions – register only (login uses client-side signIn from next-auth/react)
+ * Password stored directly in DB (plaintext)
  */
-import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
 
@@ -33,12 +32,11 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     where: { email: parsed.data.email },
   });
   if (existing) return { success: false, error: "Email already registered" };
-  const hashedPassword = await hash(parsed.data.password, 10);
   await prisma.user.create({
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
-      password: hashedPassword,
+      password: parsed.data.password,
       role: "USER",
     },
   });
