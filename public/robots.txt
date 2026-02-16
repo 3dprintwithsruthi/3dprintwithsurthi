@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /api/
+
+# Disallow auth pages from indexing
+Disallow: /login
+Disallow: /register
+
+# Allow product pages
+Allow: /products/
+
+# Sitemap
+Sitemap: https://yourdomain.vercel.app/sitemap.xml

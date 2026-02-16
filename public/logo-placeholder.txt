@@ -1,0 +1,2 @@
+Place your logo image here as logo.png (e.g. copy final_logo.png to logo.png).
+The navbar and browser tab icon use /logo.png.

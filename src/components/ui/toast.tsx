@@ -1,0 +1,42 @@
+"use client";
+
+/**
+ * Simple toast – show message on success/error (can replace with Radix Toast later)
+ */
+import * as React from "react";
+import * as ToastPrimitive from "@radix-ui/react-toast";
+import { cn } from "@/lib/utils";
+
+const ToastProvider = ToastPrimitive.Provider;
+const ToastViewport = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitive.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitive.Viewport>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitive.Viewport
+    ref={ref}
+    className={cn(
+      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      className
+    )}
+    {...props}
+  />
+));
+ToastViewport.displayName = ToastPrimitive.Viewport.displayName;
+
+const Toast = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitive.Root> & { variant?: "default" | "error" }
+>(({ className, variant = "default", ...props }, ref) => (
+  <ToastPrimitive.Root
+    ref={ref}
+    className={cn(
+      "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-xl border p-4 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:slide-in-from-top-full data-[state=closed]:slide-out-to-right-full",
+      variant === "error" ? "border-red-200 bg-red-50" : "border-indigo-200 bg-white",
+      className
+    )}
+    {...props}
+  />
+));
+Toast.displayName = ToastPrimitive.Root.displayName;
+
+export { Toast, ToastProvider, ToastViewport };
