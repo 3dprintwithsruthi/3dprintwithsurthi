@@ -1,0 +1,95 @@
+// Prisma schema for 3D Print with Sruthi – Supabase PostgreSQL
+// Use: DATABASE_URL (with ?pgbouncer=true) and DIRECT_URL (no pgbouncer) for migrations
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------
+// User – supports USER and ADMIN roles
+// ----------------------------------------
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String   // bcrypt hashed, stored securely
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  orders Order[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// ----------------------------------------
+// Product – catalog with images, video, custom fields
+// ----------------------------------------
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  images      String[] @default([])  // URLs or paths
+  videoUrl    String?
+  customFields Json?   // e.g. [{ key: "Name 1", type: "text", required: true }]
+  createdAt   DateTime @default(now())
+
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// ----------------------------------------
+// Order – status workflow (Pending → … → Delivered / Rejected)
+// ----------------------------------------
+model Order {
+  id          String   @id @default(cuid())
+  userId      String
+  status      OrderStatus @default(Pending)
+  totalAmount Decimal  @db.Decimal(10, 2)
+  address     String   // JSON or plain text shipping address
+  createdAt   DateTime @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  Pending
+  Accepted
+  InProgress
+  Shipped
+  Delivered
+  Rejected
+}
+
+// ----------------------------------------
+// OrderItem – line items with custom input (e.g. names for keychain)
+// ----------------------------------------
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  productId  String
+  quantity   Int
+  price      Decimal  @db.Decimal(10, 2)
+  customInput Json?   // e.g. { "Name 1": "John", "Name 2": "Jane", "Custom Message": "Hi" }
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
