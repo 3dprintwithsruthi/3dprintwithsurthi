@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import type { CustomFieldDef } from "@/types";
 import { AddToCartSection } from "./add-to-cart-section";
+import { getOptimizedImageUrl } from "@/lib/media";
 import { ProductGallery } from "./product-gallery";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +59,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             price={priceNum}
             maxStock={product.stock}
             customFields={customFields}
-            image={product.images[0]}
+            image={getOptimizedImageUrl(product.images[0])}
           />
         </div>
       </div>

@@ -5,6 +5,7 @@
  */
 import Link from "next/link";
 import Image from "next/image";
+import { getOptimizedImageUrl } from "@/lib/media";
 import { useCartStore } from "@/store/cart-store";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
@@ -43,7 +44,7 @@ export function CartPageClient() {
                 <div key={item.productId} className="card-rounded flex gap-4 p-4">
                   <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                     {item.image ? (
-                      <Image src={item.image} alt={item.name} fill className="object-cover" sizes="96px" />
+                      <Image src={getOptimizedImageUrl(item.image)} alt={item.name} fill className="object-cover" sizes="96px" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-gray-400">
                         <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">

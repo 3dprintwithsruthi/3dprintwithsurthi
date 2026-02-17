@@ -5,6 +5,7 @@
  */
 import Link from "next/link";
 import Image from "next/image";
+import { getOptimizedImageUrl } from "@/lib/media"; // added import
 import { useCartStore } from "@/store/cart-store";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
@@ -44,7 +45,7 @@ export function CartSidePanel() {
                   {item.image && (
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                       <Image
-                        src={item.image}
+                        src={getOptimizedImageUrl(item.image)}
                         alt={item.name}
                         fill
                         className="object-cover"

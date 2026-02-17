@@ -42,74 +42,92 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero – gradient background, headline, CTAs, glass card */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50 via-white to-purple-50/50 pt-6 pb-16 md:pb-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-xl">
-              <p className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-600">
-                <Sparkles className="h-4 w-4 text-purple-500" />
-                Custom 3D Printing 2026
-              </p>
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50 via-white to-purple-50/50 pt-12 pb-20 lg:pt-20 lg:pb-32">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between">
+
+            {/* Left Content */}
+            <div className="flex-1 max-w-2xl space-y-8 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/50 px-3 py-1 text-sm font-medium text-purple-700 shadow-sm backdrop-blur-sm border border-purple-100">
+                <Sparkles className="h-4 w-4" />
+                <span>Custom 3D Printing 2026</span>
+              </div>
+
+              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-7xl leading-tight">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
                   Print Your Ideas,
                 </span>
-                <br />
-                <span className="text-purple-800">Into Reality</span>
+                <span className="block text-gray-900 mt-2">
+                  Into Reality.
+                </span>
               </h1>
-              <p className="mt-5 text-lg text-gray-600">
-                Custom 3D printed products tailored to your needs. From prototypes to personalized gifts, we bring your imagination to life.
+
+              <p className="mx-auto lg:mx-0 max-w-lg text-lg text-gray-600 sm:text-xl leading-relaxed">
+                Custom 3D printed products tailored to your needs. From prototypes to personalized gifts, we bring your imagination to life with precision and care.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button asChild size="lg" className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button asChild size="lg" className="h-12 px-8 rounded-full bg-indigo-600 text-base shadow-lg hover:bg-indigo-700 hover:shadow-indigo-200 hover:-translate-y-0.5 transition-all">
                   <Link href="/products" prefetch>
-                    Explore Products <ArrowRight className="ml-2 inline h-4 w-4" />
+                    Explore Products <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-xl border-indigo-500 text-indigo-600 hover:bg-indigo-50">
+                <Button asChild variant="outline" size="lg" className="h-12 px-8 rounded-full border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
                   <Link href="/#featured" prefetch>
                     Learn More
                   </Link>
                 </Button>
               </div>
-            </div>
-            {/* Glass card with 4 image placeholders */}
-            <div className="flex-shrink-0">
-              <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-xl backdrop-blur-md">
-                <div className="grid grid-cols-2 gap-3">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
-                      {heroImages[i] ? (
-                        <Image
-                          src={getOptimizedImageUrl(heroImages[i] as string)}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          sizes="(max-width:768px) 40vw, 220px"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-gray-300">
-                          <span className="text-3xl">3D</span>
-                        </div>
-                      )}
-                    </div>
+
+              {/* Social Proof - Moved here for better mobile/desktop flow */}
+              <div className="pt-4 flex items-center justify-center lg:justify-start gap-4 text-sm font-medium text-gray-600">
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-10 w-10 rounded-full border-2 border-white bg-gradient-to-br from-indigo-100 to-purple-100 shadow-sm"
+                      style={{ backgroundImage: `url(https://ui-avatars.com/api/?name=User+${i}&background=random&color=fff)` }}
+                      aria-hidden
+                    />
                   ))}
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-gray-900 font-bold text-base">1,000+</span>
+                  <span className="text-xs text-gray-500">Happy Customers</span>
                 </div>
               </div>
             </div>
-          </div>
-          {/* 1000+ Happy Customers */}
-          <div className="mt-10 flex items-center justify-end gap-3 text-sm text-gray-600">
-            <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-8 w-8 rounded-full border-2 border-white bg-gradient-to-br from-indigo-400 to-purple-500 shadow"
-                  aria-hidden
-                />
-              ))}
+
+            {/* Right Image Grid - Made Larger & Responsive */}
+            <div className="flex-1 flex justify-center lg:justify-end relative mt-8 lg:mt-0">
+              {/* Decorative blob */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-purple-200/30 to-indigo-200/30 blur-3xl rounded-full -z-10" />
+
+              <div className="relative w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[540px]">
+                <div className="aspect-square rounded-3xl border border-white/60 bg-white/40 p-4 shadow-2xl backdrop-blur-xl rotate-3 hover:rotate-0 transition-transform duration-500 ease-out">
+                  <div className="grid grid-cols-2 gap-3 h-full">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="relative h-full w-full overflow-hidden rounded-2xl bg-white shadow-inner">
+                        {heroImages[i] ? (
+                          <Image
+                            src={getOptimizedImageUrl(heroImages[i] as string)}
+                            alt=""
+                            fill
+                            className="object-cover transition-transform duration-700 hover:scale-110"
+                            sizes="(max-width: 768px) 170px, 250px"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gray-50 text-gray-300">
+                            <span className="text-xl font-bold">3D</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-            <span className="font-medium">1000+ Happy Customers</span>
+
           </div>
         </div>
       </section>
