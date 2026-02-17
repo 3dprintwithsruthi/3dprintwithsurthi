@@ -166,9 +166,9 @@ export function ProductForm({ productId, defaultValues }: Props) {
             <p className="text-xs text-gray-500">PNG, JPG up to 10MB per image</p>
           </div>
           <p className="mt-4 text-left text-xs text-gray-600">
-            <strong>Allowed image links:</strong> Any direct image URL (e.g. https://example.com/image.jpg). For{" "}
-            <strong>Google Drive</strong>: open the image in Drive → right-click → Get link → set &quot;Anyone with the link&quot; → copy link. Use the <strong>direct preview URL</strong>:{" "}
-            <code className="rounded bg-gray-200 px-1">https://drive.google.com/uc?export=view&amp;id=YOUR_FILE_ID</code>. Replace YOUR_FILE_ID with the ID from your share link (the long string after /d/).
+            <strong>Supported links:</strong> Direct image URLs or <strong>Google Drive</strong> sharing links (open to anyone with link).
+            <br />
+            Example: <code>https://drive.google.com/file/d/view...</code> or <code>https://drive.google.com/open?id=...</code>
           </p>
           <textarea
             value={imagesStr}

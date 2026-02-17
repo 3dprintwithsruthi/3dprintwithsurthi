@@ -10,11 +10,12 @@ import { addressSchema } from "@/lib/validations/checkout";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { decimalToNumber } from "@/lib/utils";
 import cashfree from "@/lib/cashfree";
+import { getBaseUrl } from "@/lib/url";
 import type { OrderStatus } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
-const TAX_RATE = 0.18;
-const SHIPPING_FLAT = 49;
+const TAX_RATE = 0;
+const SHIPPING_FLAT = 0;
 
 export type OrderActionResult = {
   success: boolean;
@@ -236,6 +237,9 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
 
     // Create Cashfree payment session
     try {
+      // Get the base URL dynamically (works on localhost, Vercel, and custom domains)
+      const baseUrl = getBaseUrl();
+
       const createOrderRequest: any = {
         order_id: order.id,
         order_amount: Number(totalAmount.toFixed(2)),
@@ -247,8 +251,8 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           customer_email: session.user.email || "guest@example.com"
         },
         order_meta: {
-          return_url: `${process.env.NEXTAUTH_URL}/orders/verify?order_id=${order.id}`,
-          notify_url: `${process.env.NEXTAUTH_URL}/api/cashfree/webhook`
+          return_url: `${baseUrl}/orders/verify?order_id=${order.id}`,
+          notify_url: `${baseUrl}/api/cashfree/webhook`
         },
         order_note: "3D Print Order"
       };

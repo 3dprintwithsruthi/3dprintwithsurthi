@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DeleteProductButton } from "./delete-product-button";
+import { getOptimizedImageUrl } from "@/lib/media";
 
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
@@ -48,7 +49,7 @@ export default async function AdminProductsPage() {
                 <td className="p-3">
                   {p.images[0] ? (
                     <div className="relative h-12 w-12 overflow-hidden rounded-lg">
-                      <Image src={p.images[0]} alt="" fill className="object-cover" sizes="48px" />
+                      <Image src={getOptimizedImageUrl(p.images[0])} alt="" fill className="object-cover" sizes="48px" />
                     </div>
                   ) : (
                     <span className="text-gray-400">—</span>

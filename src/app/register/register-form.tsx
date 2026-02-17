@@ -22,6 +22,7 @@ export function RegisterForm() {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -32,6 +33,7 @@ export function RegisterForm() {
     const formData = new FormData();
     formData.set("name", data.name);
     formData.set("email", data.email);
+    formData.set("phone", data.phone);
     formData.set("password", data.password);
     formData.set("confirmPassword", data.confirmPassword);
     const result = await registerAction(formData);
@@ -60,6 +62,13 @@ export function RegisterForm() {
         <Input id="email" type="email" className="mt-1" {...form.register("email")} />
         {form.formState.errors.email && (
           <p className="mt-1 text-sm text-red-600">{form.formState.errors.email.message}</p>
+        )}
+      </div>
+      <div>
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input id="phone" type="tel" className="mt-1" {...form.register("phone")} />
+        {form.formState.errors.phone && (
+          <p className="mt-1 text-sm text-red-600">{form.formState.errors.phone.message}</p>
         )}
       </div>
       <div>

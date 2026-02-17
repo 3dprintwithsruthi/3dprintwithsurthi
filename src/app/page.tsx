@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { Sparkles, ArrowRight, FileCheck, TrendingUp, Shield } from "lucide-react";
 import type { Product } from "@prisma/client";
+import { getOptimizedImageUrl } from "@/lib/media";
 
 const FEATURED_TAKE = 6;
 
@@ -80,7 +81,7 @@ export default async function HomePage() {
                     <div key={i} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
                       {heroImages[i] ? (
                         <Image
-                          src={heroImages[i] as string}
+                          src={getOptimizedImageUrl(heroImages[i] as string)}
                           alt=""
                           fill
                           className="object-cover"
@@ -162,7 +163,7 @@ export default async function HomePage() {
                       <div className="relative aspect-square bg-gray-100">
                         {product.images[0] ? (
                           <Image
-                            src={product.images[0]}
+                            src={getOptimizedImageUrl(product.images[0])}
                             alt={product.name}
                             fill
                             className="object-cover transition group-hover:scale-105"

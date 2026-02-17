@@ -14,6 +14,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
   const raw = {
     name: formData.get("name") as string,
     email: formData.get("email") as string,
+    phone: (formData.get("phone") as string) || "",
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
   };
@@ -23,6 +24,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     const msg =
       err.fieldErrors.confirmPassword?.[0] ??
       err.fieldErrors.password?.[0] ??
+      err.fieldErrors.phone?.[0] ??
       err.fieldErrors.email?.[0] ??
       err.fieldErrors.name?.[0] ??
       "Invalid input";
@@ -36,6 +38,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
+      phone: parsed.data.phone,
       password: parsed.data.password,
       role: "USER",
     },

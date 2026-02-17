@@ -7,12 +7,13 @@ import { formatPrice } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import { OrderStatusSelect } from "./order-status-select";
+import { DeleteOrderButton } from "./delete-order-button";
 
 export default async function AdminOrdersPage() {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, phone: true } },
       orderItems: { include: { product: true } },
     },
   });
@@ -28,12 +29,18 @@ export default async function AdminOrdersPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 border-b bg-gray-50/50 p-4">
               <div>
                 <span className="font-mono text-sm text-gray-500">#{order.id.slice(-8)}</span>
-                <p className="font-medium">{order.user.name} – {order.user.email}</p>
+                <p className="font-medium">
+                  {order.user.name} – {order.user.email}
+                  {(order.user as any).phone && <span className="ml-2 text-gray-600 font-medium">({(order.user as any).phone})</span>}
+                </p>
                 <p className="text-sm text-gray-600">
                   {new Date(order.createdAt).toLocaleString()} · {formatPrice(order.totalAmount)}
                 </p>
               </div>
-              <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+              <div className="flex items-center gap-2">
+                <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+                <DeleteOrderButton orderId={order.id} />
+              </div>
             </div>
             <div className="p-4">
               <p className="text-sm text-gray-600 whitespace-pre-wrap">Address: {order.address}</p>

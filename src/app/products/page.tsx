@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@prisma/client";
+import { getOptimizedImageUrl } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -118,7 +119,7 @@ export default async function ProductsPage({
                   <div className="relative aspect-square bg-gray-100">
                     {product.images[0] ? (
                       <Image
-                        src={product.images[0]}
+                        src={getOptimizedImageUrl(product.images[0])}
                         alt={product.name}
                         fill
                         className="object-cover"

@@ -100,7 +100,7 @@ export function Navbar() {
                   </Button>
                 </Link>
               )}
-              <Link href="/orders">
+              <Link href="/account">
                 <Button variant="outline" size="sm" className="rounded-xl border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100">
                   <User className="mr-1 h-4 w-4" />
                   <span className="hidden sm:inline">{session.user?.name ?? "Account"}</span>
