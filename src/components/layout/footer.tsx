@@ -15,7 +15,6 @@ export function Footer() {
                     <span className="mx-1 font-semibold text-indigo-500">
                         <a href="https://Jasvanth-S.github.io/my_portfolio">Jasvanth. S</a>
                     </span>
-                    <Heart className="ml-1 h-3 w-3 text-red-400 fill-red-400" />
                 </div>
             </div>
         </footer>
