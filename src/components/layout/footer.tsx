@@ -11,9 +11,9 @@ export function Footer() {
                 </div>
 
                 <div className="flex items-center text-xs text-gray-400 hover:text-gray-600 transition-colors duration-300">
-                    <span>Made by</span>
+                    <span>Crafted by</span>
                     <span className="mx-1 font-semibold text-indigo-500">
-                        Jasvanth. S
+                        <a href="https://Jasvanth-S.github.io/my_portfolio">Jasvanth. S</a>
                     </span>
                     <Heart className="ml-1 h-3 w-3 text-red-400 fill-red-400" />
                 </div>
