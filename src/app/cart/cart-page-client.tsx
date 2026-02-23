@@ -3,22 +3,45 @@
 /**
  * Cart page content – items list + Order Summary side panel
  */
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getOptimizedImageUrl } from "@/lib/media";
 import { useCartStore } from "@/store/cart-store";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
+import { validateCouponAction } from "@/app/actions/coupon";
 
-const TAX_RATE = 0.18;
-const SHIPPING = 49; // Matches order action
+const TAX_RATE = 0;
+const SHIPPING = 0; // Matches order action
 
 export function CartPageClient() {
-  const { items, removeItem, updateQuantity, clearCart } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, couponCode, discount, applyCoupon, clearCoupon } = useCartStore();
+  const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const tax = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + tax + SHIPPING;
+  const totalBeforeDiscount = subtotal + tax + SHIPPING;
+  const actualDiscount = Math.min(discount, totalBeforeDiscount); // Don't discount more than total
+  const total = totalBeforeDiscount - actualDiscount;
+
+  async function handleApplyCoupon() {
+    setCouponError("");
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    const res = await validateCouponAction(couponInput.trim());
+    setIsApplying(false);
+    if (res.success && res.discountValue !== undefined) {
+      applyCoupon(couponInput.trim().toUpperCase(), res.discountValue);
+      setCouponInput("");
+    } else {
+      setCouponError(res.error || "Invalid coupon");
+    }
+  }
 
   return (
     <>
@@ -110,14 +133,45 @@ export function CartPageClient() {
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Tax (18%)</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
+                {TAX_RATE > 0 && (
+                  <div className="flex justify-between">
+                    <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
+                    <span>{formatPrice(tax)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>{formatPrice(SHIPPING)}</span>
+                  <span>{SHIPPING === 0 ? "Free" : formatPrice(SHIPPING)}</span>
                 </div>
+                {couponCode && (
+                  <div className="flex justify-between text-green-600">
+                    <span>
+                      Discount ({couponCode})
+                      <button type="button" onClick={clearCoupon} className="ml-2 text-xs text-red-500 hover:underline">
+                        Remove
+                      </button>
+                    </span>
+                    <span>-{formatPrice(actualDiscount)}</span>
+                  </div>
+                )}
+
+                {!couponCode && (
+                  <div className="pt-2 border-t">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Coupon code"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        className="h-9"
+                      />
+                      <Button onClick={handleApplyCoupon} disabled={isApplying || !couponInput.trim()} className="h-9">
+                        {isApplying ? "..." : "Apply"}
+                      </Button>
+                    </div>
+                    {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
+                  </div>
+                )}
+
                 <div className="flex justify-between border-t pt-3 text-base font-bold text-indigo-600">
                   <span>Total</span>
                   <span>{formatPrice(total)}</span>

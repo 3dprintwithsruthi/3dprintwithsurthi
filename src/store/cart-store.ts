@@ -15,9 +15,13 @@ type CartState = {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   setCustomInput: (productId: string, customInput: CartItem["customInput"]) => void;
+  couponCode: string | null;
+  discount: number;
   openCart: () => void;
   closeCart: () => void;
   clearCart: () => void;
+  applyCoupon: (code: string, discount: number) => void;
+  clearCoupon: () => void;
 };
 
 export const useCartStore = create<CartState>()(
@@ -25,6 +29,8 @@ export const useCartStore = create<CartState>()(
     (set) => ({
       items: [],
       isCartOpen: false,
+      couponCode: null,
+      discount: 0,
       addItem: (item) =>
         set((state) => {
           const existing = state.items.find((i) => i.productId === item.productId);
@@ -66,7 +72,9 @@ export const useCartStore = create<CartState>()(
         })),
       openCart: () => set({ isCartOpen: true }),
       closeCart: () => set({ isCartOpen: false }),
-      clearCart: () => set({ items: [], isCartOpen: false }),
+      clearCart: () => set({ items: [], isCartOpen: false, couponCode: null, discount: 0 }),
+      applyCoupon: (code, discount) => set({ couponCode: code, discount }),
+      clearCoupon: () => set({ couponCode: null, discount: 0 }),
     }),
     { name: "cart-3dprint", skipHydration: true }
   )

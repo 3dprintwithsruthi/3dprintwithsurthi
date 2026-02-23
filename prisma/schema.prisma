@@ -18,7 +18,6 @@ model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
-  phone     String?
   password  String   // bcrypt hashed, stored securely
   role      Role     @default(USER)
   createdAt DateTime @default(now())
@@ -45,6 +44,7 @@ model Product {
   images      String[] @default([])  // URLs or paths
   videoUrl    String?
   customFields Json?   // e.g. [{ key: "Name 1", type: "text", required: true }]
+  views       Int      @default(0)
   createdAt   DateTime @default(now())
 
   orderItems OrderItem[]
@@ -53,23 +53,14 @@ model Product {
 }
 
 // ----------------------------------------
-// Coupon – discount codes for orders
+// Coupon
 // ----------------------------------------
 model Coupon {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  description String?
-  discountType String  // PERCENTAGE, FIXED
-  discountValue Decimal @db.Decimal(10, 2)
-  minOrderValue Decimal? @db.Decimal(10, 2)
-  maxDiscount   Decimal? @db.Decimal(10, 2)
-  usageLimit    Int?    // null = unlimited
-  usedCount     Int     @default(0)
-  isActive      Boolean @default(true)
-  expiresAt     DateTime?
+  id            String   @id @default(cuid())
+  code          String   @unique
+  discountValue Decimal  @db.Decimal(10, 2)
+  isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
-
-  orders Order[]
 
   @@map("coupons")
 }
@@ -81,26 +72,18 @@ model Order {
   id          String   @id @default(cuid())
   userId      String
   status      OrderStatus @default(Pending)
-  subtotal    Decimal  @db.Decimal(10, 2) @default(0)
-  discount    Decimal  @db.Decimal(10, 2) @default(0)
-  tax         Decimal  @db.Decimal(10, 2) @default(0)
-  shipping    Decimal  @db.Decimal(10, 2) @default(49)
   totalAmount Decimal  @db.Decimal(10, 2)
+  discount    Decimal  @default(0) @db.Decimal(10, 2)
+  couponCode  String?
   address     String   // JSON or plain text shipping address
   createdAt   DateTime @default(now())
   
-  // Coupon info
-  couponId    String?
-  couponCode  String?
-  
   // Payment info
-  paymentId        String?  // Cashfree order_id
-  paymentSessionId String?  // Cashfree payment_session_id
-  paymentStatus    String   @default("PENDING") // PENDING, PAID, FAILED
-  paymentMethod    String   @default("ONLINE")  // ONLINE only
+  paymentId     String?  // Cashfree order_id
+  paymentStatus String   @default("PENDING") // PENDING, PAID, FAILED
+  paymentMethod String   @default("COD")     // COD, ONLINE
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  coupon    Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
   orderItems OrderItem[]
 
   @@map("orders")
@@ -130,4 +113,15 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@map("order_items")
+}
+
+// ----------------------------------------
+// Analytics – tracking sessions
+// ----------------------------------------
+model SiteMetric {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  visits    Int      @default(0)
+
+  @@map("site_metrics")
 }

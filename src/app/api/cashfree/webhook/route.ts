@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,10 @@ export async function POST(request: NextRequest) {
             const { order_id, payment_status, cf_payment_id } = data.payment;
 
             if (payment_status === "SUCCESS") {
+                const existingOrder = await prisma.order.findUnique({
+                    where: { id: order_id }
+                });
+
                 await prisma.order.update({
                     where: { id: order_id },
                     data: {
@@ -57,6 +62,11 @@ export async function POST(request: NextRequest) {
                 });
 
                 console.log(`Order ${order_id} marked as PAID`);
+
+                // If the order wasn't paid yet, push to Shiprocket
+                if (existingOrder && existingOrder.paymentStatus !== "PAID") {
+                    await pushOrderToShiprocket(order_id);
+                }
             }
         }
 

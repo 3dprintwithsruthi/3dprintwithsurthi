@@ -4,6 +4,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import cashfree from "@/lib/cashfree";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,11 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                             paymentId: latestPayment.cf_payment_id,
                         },
                     });
+
+                    // If it was just marked PAID, push to Shiprocket
+                    if (order.paymentStatus !== "PAID") {
+                        await pushOrderToShiprocket(orderId);
+                    }
                 } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {
                     await prisma.order.update({
                         where: { id: orderId },

@@ -1,0 +1,32 @@
+﻿prisma/seed.ts(6,30): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/app/account/page.tsx(87,47): error TS7006: Parameter 'order' implicitly has an 'any' type.
+src/app/actions/coupon.ts(9,25): error TS2307: Cannot find module '@prisma/client/runtime/library' or its corresponding type declarations.
+src/app/actions/order.ts(14,34): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/app/actions/order.ts(15,25): error TS2307: Cannot find module '@prisma/client/runtime/library' or its corresponding type declarations.
+src/app/actions/order.ts(140,19): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/actions/order.ts(156,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/actions/order.ts(191,52): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/actions/product.ts(10,25): error TS2307: Cannot find module '@prisma/client/runtime/library' or its corresponding type declarations.
+src/app/admin/analytics/page.tsx(26,45): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/admin/analytics/page.tsx(27,39): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/admin/analytics/page.tsx(27,42): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/admin/analytics/page.tsx(29,8): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/admin/analytics/page.tsx(29,11): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/admin/analytics/page.tsx(72,26): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/admin/customers/delete-user-button.tsx(7,10): error TS2305: Module '"@/app/actions/user"' has no exported member 'deleteUserAction'.
+src/app/admin/orders/order-status-select.tsx(8,34): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/app/admin/orders/page.tsx(27,22): error TS7006: Parameter 'order' implicitly has an 'any' type.
+src/app/admin/orders/page.tsx(48,40): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/app/admin/products/page.tsx(47,28): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/orders/invoice/[orderId]/page.tsx(115,56): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/app/orders/page.tsx(43,23): error TS7006: Parameter 'order' implicitly has an 'any' type.
+src/app/orders/page.tsx(65,40): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/app/page.tsx(11,30): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/app/products/page.tsx(9,30): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/lib/db.ts(5,30): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/lib/email.ts(6,34): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+src/lib/email.ts(48,34): error TS2339: Property 'id' does not exist on type 'OrderWithItems'.
+src/lib/email.ts(61,54): error TS2339: Property 'totalAmount' does not exist on type 'OrderWithItems'.
+src/lib/email.ts(62,77): error TS2339: Property 'address' does not exist on type 'OrderWithItems'.
+src/lib/email.ts(85,32): error TS2339: Property 'id' does not exist on type 'OrderWithItems'.
+src/types/index.ts(4,73): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.

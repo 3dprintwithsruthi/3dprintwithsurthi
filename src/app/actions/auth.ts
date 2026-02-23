@@ -38,7 +38,6 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
-      phone: parsed.data.phone,
       password: parsed.data.password,
       role: "USER",
     },

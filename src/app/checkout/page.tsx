@@ -13,12 +13,10 @@ export default async function CheckoutPage() {
   const session = await getSession();
   if (!session) redirect("/login?callbackUrl=/checkout");
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Secure Checkout</h1>
-        <p className="mt-2 text-gray-600">Complete your order with our secure payment gateway or choose cash on delivery.</p>
+    <div className="bg-[#f8f6fc] min-h-[calc(100vh-4rem)] py-8">
+      <div className="mx-auto max-w-6xl px-4">
+        <CheckoutForm />
       </div>
-      <CheckoutForm />
     </div>
   );
 }

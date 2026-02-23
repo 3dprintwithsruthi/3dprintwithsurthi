@@ -1,7 +1,8 @@
 "use server";
 
 /**
- * Order server actions with Coupon support and Invoice generation
+ * Order server actions – place order, update status (admin only)
+ * Inventory auto-decrease on place; email on status change
  */
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -9,80 +10,18 @@ import { getSession } from "@/lib/auth-server";
 import { addressSchema } from "@/lib/validations/checkout";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { decimalToNumber } from "@/lib/utils";
+import money from "@/lib/cashfree"; // Import as 'money' or 'cashfree'. Let's use 'cashfree'.
 import cashfree from "@/lib/cashfree";
-import { getBaseUrl } from "@/lib/url";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import type { OrderStatus } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
 const TAX_RATE = 0;
 const SHIPPING_FLAT = 0;
 
-export type OrderActionResult = {
-  success: boolean;
-  error?: string;
-  orderId?: string;
-  paymentSessionId?: string;
-};
+export type OrderActionResult = { success: boolean; error?: string; orderId?: string; paymentSessionId?: string };
 
-export type CouponValidationResult = {
-  success: boolean;
-  error?: string;
-  discount?: number;
-  discountType?: string;
-};
-
-/** Validate coupon code */
-export async function validateCouponAction(code: string, subtotal: number): Promise<CouponValidationResult> {
-  try {
-    const coupon = await prisma.coupon.findUnique({
-      where: { code: code.toUpperCase() },
-    });
-
-    if (!coupon) {
-      return { success: false, error: "Invalid coupon code" };
-    }
-
-    if (!coupon.isActive) {
-      return { success: false, error: "This coupon is no longer active" };
-    }
-
-    if (coupon.expiresAt && new Date() > coupon.expiresAt) {
-      return { success: false, error: "This coupon has expired" };
-    }
-
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-      return { success: false, error: "This coupon has reached its usage limit" };
-    }
-
-    if (coupon.minOrderValue && subtotal < decimalToNumber(coupon.minOrderValue)) {
-      return {
-        success: false,
-        error: `Minimum order value of ₹${decimalToNumber(coupon.minOrderValue)} required`
-      };
-    }
-
-    let discount = 0;
-    if (coupon.discountType === "PERCENTAGE") {
-      discount = Math.round((subtotal * decimalToNumber(coupon.discountValue)) / 100);
-      if (coupon.maxDiscount) {
-        discount = Math.min(discount, decimalToNumber(coupon.maxDiscount));
-      }
-    } else {
-      discount = decimalToNumber(coupon.discountValue);
-    }
-
-    return {
-      success: true,
-      discount,
-      discountType: coupon.discountType,
-    };
-  } catch (error) {
-    console.error("Coupon validation error:", error);
-    return { success: false, error: "Failed to validate coupon" };
-  }
-}
-
-/** Validate cart items against stock */
+/** Validate cart items against stock and return error if any out of stock */
 function validateStock(
   items: { productId: string; quantity: number; name?: string }[],
   products: { id: string; stock: number; name: string }[]
@@ -95,7 +34,7 @@ function validateStock(
   return null;
 }
 
-/** Place order with coupon support */
+/** Place order – status Pending, decrease inventory, prevent negative stock */
 export async function placeOrderAction(formData: FormData): Promise<OrderActionResult> {
   const session = await getSession();
   if (!session?.user?.email || !(session.user as { id?: string }).id) {
@@ -141,15 +80,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
   );
   if (stockErr) return { success: false, error: stockErr };
 
-  const addressStr = [
-    addressParsed.data.fullName,
-    addressParsed.data.addressLine1,
-    addressParsed.data.addressLine2,
-    `${addressParsed.data.city}, ${addressParsed.data.state} - ${addressParsed.data.pincode}`,
-    addressParsed.data.phone,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const addressStr = JSON.stringify(addressParsed.data);
 
   let subtotal = 0;
   const orderItemsData = cart.map((item) => {
@@ -165,27 +96,23 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     };
   });
 
-  // Handle coupon
+  const tax = Math.round(subtotal * TAX_RATE);
+  const shipping = SHIPPING_FLAT;
+  let totalAmount = subtotal + tax + shipping;
+
   const couponCode = formData.get("couponCode") as string | null;
   let discount = 0;
-  let couponId: string | null = null;
 
   if (couponCode) {
-    const couponValidation = await validateCouponAction(couponCode, subtotal);
-    if (couponValidation.success && couponValidation.discount) {
-      discount = couponValidation.discount;
-      const coupon = await prisma.coupon.findUnique({
-        where: { code: couponCode.toUpperCase() },
-      });
-      if (coupon) {
-        couponId = coupon.id;
-      }
+    const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
+    if (coupon && coupon.isActive) {
+      discount = Math.min(Number(coupon.discountValue), totalAmount);
+      totalAmount -= discount;
     }
   }
 
-  const tax = Math.round((subtotal - discount) * TAX_RATE);
-  const shipping = SHIPPING_FLAT;
-  const totalAmount = subtotal - discount + tax + shipping;
+  // Get payment method
+  const paymentMethod = (formData.get("paymentMethod") as string) || "COD"; // "COD" or "ONLINE"
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -193,19 +120,14 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
         data: {
           userId,
           status: "Pending",
-          subtotal: new Decimal(subtotal),
-          discount: new Decimal(discount),
-          tax: new Decimal(tax),
-          shipping: new Decimal(shipping),
           totalAmount: new Decimal(totalAmount),
+          discount: new Decimal(discount),
+          couponCode: discount > 0 ? couponCode : null,
           address: addressStr,
-          paymentMethod: "ONLINE",
-          paymentStatus: "PENDING",
-          couponId,
-          couponCode: couponCode?.toUpperCase() || null,
+          paymentMethod,
+          paymentStatus: paymentMethod === "ONLINE" ? "PENDING" : "PENDING", // PENDING for both initially
         },
       });
-
       await tx.orderItem.createMany({
         data: orderItemsData.map((item) => ({
           orderId: order.id,
@@ -215,72 +137,57 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           customInput: item.customInput,
         })),
       });
-
-      // Decrease stock
       for (const item of cart) {
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
         });
       }
-
-      // Increment coupon usage
-      if (couponId) {
-        await tx.coupon.update({
-          where: { id: couponId },
-          data: { usedCount: { increment: 1 } },
-        });
-      }
-
       return order;
     });
 
-    // Create Cashfree payment session
-    try {
-      // Get the base URL dynamically (works on localhost, Vercel, and custom domains)
-      const baseUrl = getBaseUrl();
+    if (paymentMethod === "ONLINE") {
+      try {
+        const createOrderRequest = {
+          order_id: order.id,
+          order_amount: totalAmount,
+          order_currency: "INR",
+          customer_details: {
+            customer_id: userId,
+            customer_phone: addressParsed.data.phone,
+            customer_name: addressParsed.data.fullName,
+            customer_email: session.user.email || "guest@example.com"
+          },
+          order_meta: {
+            return_url: `${process.env.NEXTAUTH_URL}/orders/verify?order_id=${order.id}`,
+            notify_url: `${process.env.NEXTAUTH_URL}/api/hooks/cashfree`
+          },
+          order_note: "3D Print Order"
+        };
 
-      const createOrderRequest: any = {
-        order_id: order.id,
-        order_amount: Number(totalAmount.toFixed(2)),
-        order_currency: "INR",
-        customer_details: {
-          customer_id: userId,
-          customer_phone: addressParsed.data.phone,
-          customer_name: addressParsed.data.fullName,
-          customer_email: session.user.email || "guest@example.com"
-        },
-        order_meta: {
-          return_url: `${baseUrl}/orders/verify?order_id=${order.id}`,
-          notify_url: `${baseUrl}/api/cashfree/webhook`
-        },
-        order_note: "3D Print Order"
-      };
+        const response = await cashfree.PGCreateOrder(createOrderRequest);
+        const paymentSessionId = response.data.payment_session_id;
 
-      const response = await cashfree.PGCreateOrder(createOrderRequest as any);
-      const paymentSessionId = response.data.payment_session_id;
+        return { success: true, orderId: order.id, paymentSessionId };
 
-      // Update order with payment session ID
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          paymentSessionId: paymentSessionId,
-          paymentStatus: "PENDING"
-        }
-      });
-
-      revalidatePath("/");
-      revalidatePath("/orders");
-      revalidatePath("/admin/orders");
-      return { success: true, orderId: order.id, paymentSessionId };
-    } catch (cfError) {
-      console.error("Cashfree Error:", cfError);
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { paymentStatus: "FAILED" }
-      });
-      return { success: false, error: "Failed to initiate online payment. Please try again." };
+      } catch (cfError) {
+        console.error("Cashfree Error:", cfError);
+        // If payment creation fails, mark order as FAILED.
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentStatus: "FAILED", status: "Rejected" }
+        });
+        return { success: false, error: "Failed to initiate online payment. Please try again." };
+      }
+    } else {
+      // If paymentMethod is COD, push to Shiprocket immediately
+      await pushOrderToShiprocket(order.id);
     }
+
+    revalidatePath("/");
+    revalidatePath("/orders");
+    revalidatePath("/admin/orders");
+    return { success: true, orderId: order.id };
   } catch (e) {
     return {
       success: false,

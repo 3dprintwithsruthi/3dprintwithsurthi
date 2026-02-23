@@ -7,6 +7,7 @@ import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
 import { CartSidePanelWrapper } from "@/components/layout/cart-side-panel-wrapper";
 import { Footer } from "@/components/layout/footer";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
@@ -89,6 +90,7 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning={true}>
         <AuthSessionProvider>
+          <AnalyticsTracker />
           <ConditionalNavbar />
           <main className="min-h-[calc(100vh-4rem)]">{children}</main>
           <CartSidePanelWrapper />

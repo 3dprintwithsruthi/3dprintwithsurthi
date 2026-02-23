@@ -10,14 +10,16 @@ import { useCartStore } from "@/store/cart-store";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
-const TAX_RATE = 0.18;
-const SHIPPING = 49;
+const TAX_RATE = 0;
+const SHIPPING = 0;
 
 export function CartSidePanel() {
-  const { items, isCartOpen, closeCart, removeItem, updateQuantity, clearCart } = useCartStore();
+  const { items, isCartOpen, closeCart, removeItem, updateQuantity, clearCart, couponCode, discount, clearCoupon } = useCartStore();
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const tax = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + tax + SHIPPING;
+  const totalBeforeDiscount = subtotal + tax + SHIPPING;
+  const actualDiscount = Math.min(discount, totalBeforeDiscount);
+  const total = totalBeforeDiscount - actualDiscount;
 
   if (!isCartOpen) return null;
 
@@ -93,14 +95,22 @@ export function CartSidePanel() {
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Tax (18%)</span>
-                <span>{formatPrice(tax)}</span>
-              </div>
+              {TAX_RATE > 0 && (
+                <div className="flex justify-between">
+                  <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
+                  <span>{formatPrice(tax)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>{formatPrice(SHIPPING)}</span>
+                <span>{SHIPPING === 0 ? "Free" : formatPrice(SHIPPING)}</span>
               </div>
+              {couponCode && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({couponCode})</span>
+                  <span>-{formatPrice(actualDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-semibold text-base pt-2">
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
