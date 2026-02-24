@@ -62,3 +62,21 @@ export async function deleteCouponAction(id: string) {
         return { success: false, error: "Failed to delete coupon" };
     }
 }
+
+export async function toggleCouponStatusAction(id: string, isActive: boolean) {
+    const session = await getSession();
+    if ((session?.user as any)?.role !== "ADMIN") {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        await prisma.coupon.update({
+            where: { id },
+            data: { isActive },
+        });
+        revalidatePath("/admin/coupons");
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: "Failed to update coupon status" };
+    }
+}

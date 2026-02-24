@@ -47,7 +47,7 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
     let paymentVerified = false;
 
     try {
-        if (order.paymentSessionId) {
+        if (order) {
             const response = await cashfree.PGOrderFetchPayments("2023-08-01", orderId);
 
             if (response.data && response.data.length > 0) {

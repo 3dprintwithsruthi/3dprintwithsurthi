@@ -45,11 +45,18 @@ export default async function InvoicePage({ params }: PageProps) {
         redirect(`/orders?placed=${order.id}`);
     }
 
-    const subtotal = decimalToNumber(order.subtotal);
-    const discount = decimalToNumber(order.discount);
-    const tax = decimalToNumber(order.tax);
-    const shipping = decimalToNumber(order.shipping);
+    // Calculate derived order metrics
     const total = decimalToNumber(order.totalAmount);
+    const discount = decimalToNumber(order.discount);
+
+    // Instead of properties that don't exist on Prisma model
+    let subtotalLineItems = 0;
+    order.orderItems.forEach(item => {
+        subtotalLineItems += decimalToNumber(item.price) * item.quantity;
+    });
+
+    const tax = Math.round(subtotalLineItems * 0); // Assuming 0% tax per constant in actions/order.ts
+    const shipping = 0; // Assuming free shipping per constant in actions/order.ts
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-violet-100 py-12 print:bg-white">
@@ -132,7 +139,7 @@ export default async function InvoicePage({ params }: PageProps) {
                     <div className="ml-auto max-w-sm space-y-2">
                         <div className="flex justify-between text-sm text-gray-700">
                             <span>Subtotal:</span>
-                            <span>{formatPrice(subtotal)}</span>
+                            <span>{formatPrice(subtotalLineItems)}</span>
                         </div>
                         {discount > 0 && (
                             <div className="flex justify-between text-sm font-semibold text-green-600">
