@@ -143,6 +143,15 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           data: { stock: { decrement: item.quantity } },
         });
       }
+
+      // Update the user's phone number in the DB from the order details
+      if (addressParsed.data.phone) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { phone: addressParsed.data.phone },
+        });
+      }
+
       return order;
     });
 

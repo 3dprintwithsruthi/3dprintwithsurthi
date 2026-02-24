@@ -18,7 +18,9 @@ model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
-  password  String   // bcrypt hashed, stored securely
+  password  String?  // bcrypt hashed, stored securely or null for OAuth
+  image     String?
+  phone     String?
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
