@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AccountDeleteButton } from "./delete-button";
-import { Package, User } from "lucide-react";
+import { Package, User, ChevronRight, ShieldCheck, Mail, Calendar, Phone } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,91 +29,167 @@ export default async function AccountPage() {
     if (!user) redirect("/login");
 
     return (
-        <div className="mx-auto max-w-4xl px-4 py-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">My Account</h1>
+        <div className="min-h-screen bg-gray-50/50 py-12">
+            <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 
-            <div className="grid gap-8 md:grid-cols-3">
-                {/* Profile Card */}
-                <div className="md:col-span-1">
-                    <div className="card-rounded p-6 bg-white shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                <User className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h2 className="font-semibold text-gray-900">{user.name}</h2>
-                                <p className="text-sm text-gray-500">{user.role}</p>
-                            </div>
-                        </div>
+                <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-2">My Account</h1>
+                        <p className="text-gray-500 text-lg">Manage your profile, settings, and view recent orders.</p>
+                    </div>
+                    {user.role === "ADMIN" && (
+                        <Button asChild className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-md">
+                            <Link href="/admin">Go to Admin Dashboard</Link>
+                        </Button>
+                    )}
+                </div>
 
-                        <div className="space-y-3 text-sm">
-                            <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase">Email</label>
-                                <p className="text-gray-900">{user.email}</p>
-                            </div>
-                            {user && (user as any).phone && (
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 uppercase">Phone</label>
-                                    <p className="text-gray-900">{(user as any).phone}</p>
+                <div className="grid gap-8 lg:grid-cols-12 items-start">
+
+                    {/* Left Column - Profile Card */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
+                            {/* Decorative Background Blob */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-0 opacity-50" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-5 mb-8">
+                                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 shrink-0">
+                                        <span className="text-2xl font-black">{user.name?.[0]?.toUpperCase() || 'U'}</span>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{user.name}</h2>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <div className={`h-2 w-2 rounded-full ${user.role === 'ADMIN' ? 'bg-purple-500' : 'bg-green-500'}`} />
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{user.role}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                            <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase">Member Since</label>
-                                <p className="text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
+
+                                <div className="space-y-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 border border-gray-100">
+                                            <Mail className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Email Address</label>
+                                            <p className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    {(user as any).phone && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 border border-gray-100">
+                                                <Phone className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Phone Number</label>
+                                                <p className="text-sm font-semibold text-gray-900">{(user as any).phone}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 border border-gray-100">
+                                            <Calendar className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Member Since</label>
+                                            <p className="text-sm font-semibold text-gray-900">{new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-gray-100">
-                            <h3 className="text-sm font-medium text-red-600 mb-2">Danger Zone</h3>
+                        {/* Danger Zone */}
+                        <div className="bg-red-50/50 rounded-3xl p-6 border border-red-100">
+                            <h3 className="text-sm font-bold text-red-800 mb-2 flex items-center gap-2">
+                                Danger Zone
+                            </h3>
+                            <p className="text-xs text-red-600/80 mb-4 leading-relaxed">
+                                Permanently delete your account and all associated data. This action cannot be reversed.
+                            </p>
                             <AccountDeleteButton />
                         </div>
                     </div>
-                </div>
 
-                {/* Recent Orders */}
-                <div className="md:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                            <Package className="h-5 w-5 text-indigo-600" />
-                            Recent Orders
-                        </h2>
-                        <Link href="/orders" className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline">
-                            View All Orders
-                        </Link>
-                    </div>
-
-                    {user.orders.length > 0 ? (
-                        <div className="space-y-4">
-                            {user.orders.map((order) => (
-                                <Link key={order.id} href={`/orders?placed=${order.id}`} className="block">
-                                    <div className="card-rounded p-4 bg-white hover:shadow-md transition border border-gray-100">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <span className="text-xs font-mono text-gray-500">#{order.id.slice(-8)}</span>
-                                                <p className="font-medium text-gray-900">{formatPrice(order.totalAmount)}</p>
-                                            </div>
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                    'bg-blue-50 text-blue-700'
-                                                }`}>
-                                                {order.status}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-gray-500">
-                                            {new Date(order.createdAt).toLocaleDateString()}
-                                        </p>
+                    {/* Right Column - Recent Orders */}
+                    <div className="lg:col-span-8 space-y-6">
+                        <div className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100 h-full">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold shrink-0">
+                                        <Package className="h-5 w-5" />
                                     </div>
-                                </Link>
-                            ))}
+                                    <div>
+                                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Recent Orders</h2>
+                                        <p className="text-sm text-gray-500 mt-0.5">Your latest purchases and print jobs</p>
+                                    </div>
+                                </div>
+                                <Button asChild variant="outline" className="rounded-full border-gray-200 text-gray-600 font-semibold hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50">
+                                    <Link href="/orders">
+                                        View All History
+                                    </Link>
+                                </Button>
+                            </div>
+
+                            {user.orders.length > 0 ? (
+                                <div className="space-y-4">
+                                    {user.orders.map((order) => {
+                                        let statusColor = 'bg-blue-50 text-blue-700 border-blue-100';
+                                        if (order.status === 'Delivered') statusColor = 'bg-green-50 text-green-700 border-green-100';
+                                        if (order.status === 'Rejected' || order.status === 'Cancelled') statusColor = 'bg-red-50 text-red-700 border-red-100';
+                                        if (order.status === 'Paid') statusColor = 'bg-purple-50 text-purple-700 border-purple-100';
+
+                                        return (
+                                            <Link key={order.id} href={`/orders?placed=${order.id}`} className="block group">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50/50 hover:bg-white border border-gray-100 hover:border-indigo-200 transition-all duration-300 group-hover:shadow-md">
+
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="h-12 w-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-indigo-500 transition-colors shrink-0">
+                                                            <Package className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-widest">#{order.id.slice(-8)}</span>
+                                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${statusColor}`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm font-medium text-gray-600">
+                                                                {new Date(order.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between sm:justify-end gap-6 sm:pl-4 sm:border-l border-gray-100 pt-4 sm:pt-0 mt-4 sm:mt-0 border-t sm:border-t-0">
+                                                        <div className="text-left sm:text-right">
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Total Amount</p>
+                                                            <p className="font-black text-gray-900 text-lg tracking-tight">{formatPrice(order.totalAmount)}</p>
+                                                        </div>
+                                                        <div className="h-8 w-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white transition-colors">
+                                                            <ChevronRight className="h-4 w-4" />
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+                                    <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 shadow-sm">
+                                        <Package className="h-6 w-6 text-gray-300" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-1">No orders yet</h3>
+                                    <p className="text-gray-500 mb-6 max-w-sm mx-auto">You haven't placed any 3D print orders yet. Explore our catalog to get started.</p>
+                                    <Button asChild className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 shadow-sm">
+                                        <Link href="/products">Browse Catalog</Link>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                            <p className="text-gray-500">No orders yet</p>
-                            <Button asChild variant="ghost" className="mt-2 text-indigo-600 hover:bg-indigo-50">
-                                <Link href="/products">Start Shopping</Link>
-                            </Button>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
