@@ -137,8 +137,8 @@ export default async function AccountPage() {
                                     {user.orders.map((order) => {
                                         let statusColor = 'bg-blue-50 text-blue-700 border-blue-100';
                                         if (order.status === 'Delivered') statusColor = 'bg-green-50 text-green-700 border-green-100';
-                                        if (order.status === 'Rejected' || order.status === 'Cancelled') statusColor = 'bg-red-50 text-red-700 border-red-100';
-                                        if (order.status === 'Paid') statusColor = 'bg-purple-50 text-purple-700 border-purple-100';
+                                        if (order.status === 'Rejected') statusColor = 'bg-red-50 text-red-700 border-red-100';
+                                        if (order.paymentStatus === 'PAID') statusColor = 'bg-purple-50 text-purple-700 border-purple-100';
 
                                         return (
                                             <Link key={order.id} href={`/orders?placed=${order.id}`} className="block group">
