@@ -12,6 +12,7 @@ import { sendOrderStatusEmail } from "@/lib/email";
 import { decimalToNumber } from "@/lib/utils";
 import money from "@/lib/cashfree"; // Import as 'money' or 'cashfree'. Let's use 'cashfree'.
 import cashfree from "@/lib/cashfree";
+import { headers } from "next/headers";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import type { OrderStatus } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
@@ -157,6 +158,12 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
 
     if (paymentMethod === "ONLINE") {
       try {
+        const headersList = await headers();
+        const host = headersList.get("host");
+        const protocol = headersList.get("x-forwarded-proto") || "http";
+        // On Vercel, x-forwarded-proto is 'https' and host is the real production URL.
+        const domain = host ? `${protocol}://${host}` : process.env.NEXTAUTH_URL!;
+
         const createOrderRequest = {
           order_id: order.id,
           order_amount: totalAmount,
@@ -168,8 +175,8 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
             customer_email: session.user.email || "guest@example.com"
           },
           order_meta: {
-            return_url: `${process.env.NEXTAUTH_URL}/orders/verify?order_id=${order.id}`,
-            notify_url: `${process.env.NEXTAUTH_URL}/api/hooks/cashfree`
+            return_url: `${domain}/orders/verify?order_id=${order.id}`,
+            notify_url: `${domain}/api/cashfree/webhook`
           },
           order_note: "3D Print Order"
         };
@@ -191,7 +198,8 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           where: { id: order.id },
           data: { paymentStatus: "FAILED", status: "Rejected" }
         });
-        return { success: false, error: "Failed to initiate online payment. Please try again." };
+        revalidatePath("/orders");
+        return { success: false, error: "Payment gateway configuration error. Please try again or use Cash on Delivery." };
       }
     } else {
       // If paymentMethod is COD, push to Shiprocket immediately
