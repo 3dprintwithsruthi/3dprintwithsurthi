@@ -138,11 +138,13 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           customInput: item.customInput,
         })),
       });
-      for (const item of cart) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
+      if (paymentMethod === "COD") {
+        for (const item of cart) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
       }
 
       // Update the user's phone number in the DB from the order details

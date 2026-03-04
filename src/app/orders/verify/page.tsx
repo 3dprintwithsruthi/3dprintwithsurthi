@@ -57,17 +57,24 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                 if (paymentStatus === "SUCCESS") {
                     paymentVerified = true;
 
-                    // Update order payment status
-                    await prisma.order.update({
-                        where: { id: orderId },
-                        data: {
-                            paymentStatus: "PAID",
-                            paymentId: latestPayment.cf_payment_id,
-                        },
-                    });
-
-                    // If it was just marked PAID, push to Shiprocket
+                    // If it was just marked PAID, push to Shiprocket and decrement stock
                     if (order.paymentStatus !== "PAID") {
+                        await prisma.$transaction(async (tx) => {
+                            await tx.order.update({
+                                where: { id: orderId },
+                                data: {
+                                    paymentStatus: "PAID",
+                                    paymentId: latestPayment.cf_payment_id,
+                                },
+                            });
+                            for (const item of order.orderItems) {
+                                await tx.product.update({
+                                    where: { id: item.productId },
+                                    data: { stock: { decrement: item.quantity } },
+                                });
+                            }
+                        });
+
                         await pushOrderToShiprocket(orderId);
                     }
                 } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {

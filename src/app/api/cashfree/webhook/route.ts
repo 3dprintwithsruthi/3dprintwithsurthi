@@ -50,21 +50,29 @@ export async function POST(request: NextRequest) {
 
             if (payment_status === "SUCCESS") {
                 const existingOrder = await prisma.order.findUnique({
-                    where: { id: order_id }
-                });
-
-                await prisma.order.update({
                     where: { id: order_id },
-                    data: {
-                        paymentStatus: "PAID",
-                        paymentId: cf_payment_id,
-                    },
+                    include: { orderItems: true }
                 });
 
-                console.log(`Order ${order_id} marked as PAID`);
-
-                // If the order wasn't paid yet, push to Shiprocket
+                // If the order wasn't paid yet, push to Shiprocket and decrement stock
                 if (existingOrder && existingOrder.paymentStatus !== "PAID") {
+                    await prisma.$transaction(async (tx) => {
+                        await tx.order.update({
+                            where: { id: order_id },
+                            data: {
+                                paymentStatus: "PAID",
+                                paymentId: cf_payment_id,
+                            },
+                        });
+                        for (const item of existingOrder.orderItems) {
+                            await tx.product.update({
+                                where: { id: item.productId },
+                                data: { stock: { decrement: item.quantity } },
+                            });
+                        }
+                    });
+
+                    console.log(`Order ${order_id} marked as PAID and stock decremented`);
                     await pushOrderToShiprocket(order_id);
                 }
             }
