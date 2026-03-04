@@ -102,6 +102,10 @@ export function CheckoutForm() {
       router.refresh();
       return;
     }
+
+    // Always refresh the router on error so standard navigation to /orders breaks the client cache
+    // since the database transaction might have committed a 'Rejected' order.
+    router.refresh();
     setError(result.error ?? "Failed to place order");
   }
 

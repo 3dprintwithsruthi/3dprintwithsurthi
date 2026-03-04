@@ -199,7 +199,9 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           data: { paymentStatus: "FAILED", status: "Rejected" }
         });
         revalidatePath("/orders");
-        return { success: false, error: "Payment gateway configuration error. Please try again or use Cash on Delivery." };
+        const cfErr = cfError as any;
+        const cfErrorMsg = cfErr.response?.data?.message || cfErr.message || "Unknown Cashfree API Error";
+        return { success: false, error: `Payment Gateway Error: ${cfErrorMsg}. Please try Cash on Delivery.` };
       }
     } else {
       // If paymentMethod is COD, push to Shiprocket immediately
