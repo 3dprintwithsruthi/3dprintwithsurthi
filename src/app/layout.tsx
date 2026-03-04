@@ -12,25 +12,30 @@ import { AnalyticsTracker } from "@/components/analytics-tracker";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
   title: {
-    default: "3D Print with Sruthi - Custom 3D Printing Services",
-    template: "%s | 3D Print with Sruthi"
+    default: "3D Print with Sruthi | Custom 3D Print Services",
+    template: "%s | Sruthi 3D Print"
   },
   description:
-    "Custom 3D printed products tailored to your needs. From prototypes to personalized gifts, we bring your imagination to life with high-quality 3D printing services.",
+    "Looking for high-quality 3d print services? 3D Print with Sruthi provides custom 3D printing, prototypes, and personalized gifts. Turn your imagination into reality.",
   keywords: [
-    "3D printing",
-    "custom 3D prints",
-    "personalized gifts",
+    "3d print",
+    "3d print sruthi",
+    "Sruthi 3d print",
+    "custom 3d print",
+    "3D printing India",
+    "personalized 3d gifts",
     "3D printing services",
     "prototypes",
-    "3D printed products",
     "custom keychains",
     "3D models",
     "rapid prototyping"
   ],
-  authors: [{ name: "3D Print with Sruthi" }],
-  creator: "3D Print with Sruthi",
+  authors: [{ name: "Sruthi", url: "https://3dprintwithsruthi.com" }],
+  creator: "Sruthi",
   publisher: "3D Print with Sruthi",
+  alternates: {
+    canonical: '/',
+  },
   formatDetection: {
     email: false,
     address: false,
@@ -42,24 +47,24 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-    siteName: "3D Print with Sruthi",
-    title: "3D Print with Sruthi – Custom 3D Printing Store",
-    description: "Custom 3D printed products. Print your ideas into reality with our professional 3D printing services.",
+    siteName: "Sruthi 3D Print",
+    title: "3D Print with Sruthi | Custom 3D Print Services",
+    description: "Looking for high-quality 3d print services? 3D Print with Sruthi provides custom 3D printing, prototypes, and personalized gifts.",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "3D Print with Sruthi Logo",
+        alt: "Sruthi 3D Print Logo",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "3D Print with Sruthi – Custom 3D Printing Store",
-    description: "Custom 3D printed products. Print your ideas into reality.",
+    title: "3D Print with Sruthi | Custom 3D Print Services",
+    description: "Looking for high-quality 3d print services? 3D Print with Sruthi provides custom 3D printing, prototypes, and personalized gifts.",
     images: ["/logo.png"],
   },
   robots: {
@@ -73,6 +78,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    google: "change-this-to-google-site-verification-code",
+  }
 };
 
 export const viewport: Viewport = {

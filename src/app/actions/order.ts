@@ -19,7 +19,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 const TAX_RATE = 0;
 const SHIPPING_FLAT = 0;
 
-export type OrderActionResult = { success: boolean; error?: string; orderId?: string; paymentSessionId?: string };
+export type OrderActionResult = { success: boolean; error?: string; orderId?: string; paymentSessionId?: string; env?: string };
 
 /** Validate cart items against stock and return error if any out of stock */
 function validateStock(
@@ -177,7 +177,12 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
         const response = await cashfree.PGCreateOrder(createOrderRequest);
         const paymentSessionId = response.data.payment_session_id;
 
-        return { success: true, orderId: order.id, paymentSessionId };
+        return {
+          success: true,
+          orderId: order.id,
+          paymentSessionId,
+          env: process.env.CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox"
+        };
 
       } catch (cfError) {
         console.error("Cashfree Error:", cfError);

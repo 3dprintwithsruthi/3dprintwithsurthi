@@ -55,15 +55,15 @@ export default async function HomePage() {
 
               <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-7xl leading-tight">
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-                  Print Your Ideas,
+                  Sruthi 3D Print.
                 </span>
                 <span className="block text-gray-900 mt-2">
-                  Into Reality.
+                  Ideas Into Reality.
                 </span>
               </h1>
 
               <p className="mx-auto lg:mx-0 max-w-lg text-lg text-gray-600 sm:text-xl leading-relaxed">
-                Custom 3D printed products tailored to your needs. From prototypes to personalized gifts, we bring your imagination to life with precision and care.
+                Looking for high-quality <strong className="font-semibold text-gray-800">3d print services</strong>? The premier destination for <strong className="font-semibold text-gray-800">3d print sruthi</strong> designs, custom models and personalized gifts. We bring your imagination to life.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -140,8 +140,8 @@ export default async function HomePage() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100">
                 <FileCheck className="h-7 w-7 text-purple-600" />
               </div>
-              <h3 className="mt-4 text-lg font-bold text-gray-900">Custom 3D Prints</h3>
-              <p className="mt-2 text-gray-600">Personalize every design to your exact specifications</p>
+              <h3 className="mt-4 text-lg font-bold text-gray-900">Custom 3D Print</h3>
+              <p className="mt-2 text-gray-600">Personalize every 3d print sruthi design to your exact specifications</p>
             </div>
             <div className="card-rounded p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100">

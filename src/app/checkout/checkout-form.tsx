@@ -94,7 +94,7 @@ export function CheckoutForm() {
       clearCoupon();
 
       if (result.paymentSessionId) {
-        router.push(`/checkout/payment?session_id=${result.paymentSessionId}&order_id=${result.orderId}`);
+        router.push(`/checkout/payment?session_id=${result.paymentSessionId}&order_id=${result.orderId}&env=${result.env}`);
       } else {
         router.push(`/orders?placed=${result.orderId}`);
       }

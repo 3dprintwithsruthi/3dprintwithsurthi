@@ -16,6 +16,7 @@ export default function PaymentPage() {
 
     const sessionId = searchParams.get("session_id");
     const orderId = searchParams.get("order_id");
+    const envVal = searchParams.get("env") || "sandbox";
 
     useEffect(() => {
         if (!sessionId || !orderId) {
@@ -28,7 +29,7 @@ export default function PaymentPage() {
             try {
                 // Load Cashfree SDK
                 const cashfree = await load({
-                    mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox",
+                    mode: envVal as "sandbox" | "production",
                 });
 
                 if (!cashfree) {
