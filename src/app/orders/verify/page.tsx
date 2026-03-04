@@ -48,7 +48,7 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
 
     try {
         if (order) {
-            const response = await cashfree.PGOrderFetchPayments("2023-08-01", orderId);
+            const response = await cashfree.PGOrderFetchPayments(orderId);
 
             if (response.data && response.data.length > 0) {
                 const latestPayment = response.data[0];
