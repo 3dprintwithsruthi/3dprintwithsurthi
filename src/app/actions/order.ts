@@ -10,7 +10,7 @@ import { getSession } from "@/lib/auth-server";
 import { addressSchema } from "@/lib/validations/checkout";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { decimalToNumber } from "@/lib/utils";
-import Cashfree from "@/lib/cashfree";
+import cashfree from "@/lib/cashfree";
 import { headers } from "next/headers";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import type { OrderStatus } from "@prisma/client";
@@ -182,7 +182,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           order_note: "3D Print Order"
         };
 
-        const response = await Cashfree.PGCreateOrder("2023-08-01", createOrderRequest);
+        const response = await cashfree.PGCreateOrder(createOrderRequest);
         const paymentSessionId = response.data.payment_session_id;
 
         return {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
-import Cashfree from "@/lib/cashfree";
+import cashfree from "@/lib/cashfree";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
         try {
             // Throw error if signature is invalid
-            Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+            cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
         } catch (err: any) {
             console.error("Invalid webhook signature:", err?.message || err);
             return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
