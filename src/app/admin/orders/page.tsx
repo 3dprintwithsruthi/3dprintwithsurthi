@@ -12,6 +12,12 @@ import { DeleteOrderButton } from "./delete-order-button";
 export default async function AdminOrdersPage() {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
+    where: {
+      OR: [
+        { paymentMethod: "COD" },
+        { paymentStatus: "PAID" }
+      ]
+    },
     include: {
       user: { select: { id: true, name: true, email: true } },
       orderItems: { include: { product: true } },

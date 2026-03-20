@@ -90,9 +90,6 @@ export function CheckoutForm() {
 
     const result = await placeOrderAction(formData);
     if (result.success && result.orderId) {
-      clearCart();
-      clearCoupon();
-
       if (result.paymentSessionId) {
         // Direct redirect bypassing the /payment route entirely!
         try {
@@ -107,6 +104,8 @@ export function CheckoutForm() {
           router.push(`/checkout/payment?session_id=${result.paymentSessionId}&order_id=${result.orderId}&env=${result.env}`);
         }
       } else {
+        clearCart();
+        clearCoupon();
         router.push(`/orders?placed=${result.orderId}`);
       }
 
