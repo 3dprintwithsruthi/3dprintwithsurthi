@@ -94,7 +94,18 @@ export function CheckoutForm() {
       clearCoupon();
 
       if (result.paymentSessionId) {
-        router.push(`/checkout/payment?session_id=${result.paymentSessionId}&order_id=${result.orderId}&env=${result.env}`);
+        // Direct redirect bypassing the /payment route entirely!
+        try {
+          const { load } = await import("@cashfreepayments/cashfree-js");
+          const cashfree = await load({ mode: result.env as "sandbox" | "production" });
+          await cashfree?.checkout({
+            paymentSessionId: result.paymentSessionId,
+            redirectTarget: "_self" // Redirect directly to Cashfree's payment page
+          });
+        } catch (err) {
+          console.error("Failed to load cashfree SDK for redirect", err);
+          router.push(`/checkout/payment?session_id=${result.paymentSessionId}&order_id=${result.orderId}&env=${result.env}`);
+        }
       } else {
         router.push(`/orders?placed=${result.orderId}`);
       }
