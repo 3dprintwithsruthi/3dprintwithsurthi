@@ -1,17 +1,9 @@
+import { Cashfree } from "cashfree-pg";
 
-import { Cashfree, CFEnvironment } from "cashfree-pg";
+Cashfree.XClientId = process.env.CASHFREE_APP_ID || "";
+Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY || "";
+Cashfree.XEnvironment = process.env.CASHFREE_ENV === "PRODUCTION" 
+    ? Cashfree.Environment.PRODUCTION 
+    : Cashfree.Environment.SANDBOX;
 
-const cashfree = new Cashfree(
-    process.env.CASHFREE_ENV === 'PRODUCTION' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
-    process.env.CASHFREE_APP_ID,
-    process.env.CASHFREE_SECRET_KEY,
-    undefined,
-    undefined,
-    undefined,
-    false,
-    undefined
-);
-
-cashfree.XApiVersion = "2023-08-01";
-
-export default cashfree;
+export default Cashfree;

@@ -1,6 +1,14 @@
 import { prisma } from "./db";
 
+let cachedToken: string | null = null;
+let tokenExpiryTimestamp: number = 0;
+
 export async function getShiprocketToken() {
+    const now = Date.now();
+    if (cachedToken && now < tokenExpiryTimestamp) {
+        return cachedToken;
+    }
+
     const url = "https://apiv2.shiprocket.in/v1/external/auth/login";
     const params = {
         method: "POST",
@@ -18,7 +26,10 @@ export async function getShiprocketToken() {
             return null;
         }
         const data = await res.json();
-        return data.token;
+        cachedToken = data.token;
+        // Shiprocket tokens last 240 hours normally, but refresh every 23 hours to be safe
+        tokenExpiryTimestamp = now + (23 * 60 * 60 * 1000);
+        return cachedToken;
     } catch (error) {
         console.error("Shiprocket Token Error:", error);
         return null;
@@ -76,7 +87,7 @@ export async function pushOrderToShiprocket(orderId: string) {
 
         const payload = {
             order_id: order.id,
-            order_date: order.createdAt.toISOString(),
+            order_date: new Date().toISOString(),
             pickup_location: "Primary",
             billing_customer_name: addressData.fullName || order.user.name,
             billing_address: addressData.addressLine1 || "No Address",

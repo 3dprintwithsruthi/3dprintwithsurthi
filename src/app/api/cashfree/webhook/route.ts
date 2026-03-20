@@ -1,31 +1,9 @@
-/**
- * Cashfree Webhook Handler
- * Receives payment status updates from Cashfree
- */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
-import crypto from "crypto";
+import Cashfree from "@/lib/cashfree";
 
 export const dynamic = "force-dynamic";
-
-// Verify Cashfree webhook signature
-function verifyWebhookSignature(
-    rawBody: string,
-    signature: string,
-    timestamp: string
-): boolean {
-    const secretKey = process.env.CASHFREE_SECRET_KEY;
-    if (!secretKey) return false;
-
-    const signatureData = `${timestamp}${rawBody}`;
-    const computedSignature = crypto
-        .createHmac("sha256", secretKey)
-        .update(signatureData)
-        .digest("base64");
-
-    return computedSignature === signature;
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -33,28 +11,29 @@ export async function POST(request: NextRequest) {
         const signature = request.headers.get("x-webhook-signature") || "";
         const timestamp = request.headers.get("x-webhook-timestamp") || "";
 
-        // Verify signature
-        if (!verifyWebhookSignature(rawBody, signature, timestamp)) {
-            console.error("Invalid webhook signature");
+        try {
+            // Throw error if signature is invalid
+            Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+        } catch (err: any) {
+            console.error("Invalid webhook signature:", err?.message || err);
             return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
         }
 
         const payload = JSON.parse(rawBody);
         const { type, data } = payload;
 
-        console.log("Cashfree webhook received:", type, data);
+        console.log("Cashfree webhook received:", type, data?.payment?.order_id);
 
-        // Handle payment success
         if (type === "PAYMENT_SUCCESS_WEBHOOK") {
             const { order_id, payment_status, cf_payment_id } = data.payment;
 
+            // Idempotency check: Process only if payment_status is SUCCESS
             if (payment_status === "SUCCESS") {
                 const existingOrder = await prisma.order.findUnique({
                     where: { id: order_id },
                     include: { orderItems: true }
                 });
 
-                // If the order wasn't paid yet, push to Shiprocket and decrement stock
                 if (existingOrder && existingOrder.paymentStatus !== "PAID") {
                     await prisma.$transaction(async (tx) => {
                         await tx.order.update({
@@ -62,6 +41,7 @@ export async function POST(request: NextRequest) {
                             data: {
                                 paymentStatus: "PAID",
                                 paymentId: cf_payment_id,
+                                status: "Accepted" // Move to confirmed automatically
                             },
                         });
                         for (const item of existingOrder.orderItems) {
@@ -72,13 +52,15 @@ export async function POST(request: NextRequest) {
                         }
                     });
 
-                    console.log(`Order ${order_id} marked as PAID and stock decremented`);
+                    console.log(`Order ${order_id} marked as PAID and stock decremented. Pushing to Shiprocket...`);
+                    // Ensure shiprocket only gets hit once
                     await pushOrderToShiprocket(order_id);
+                } else {
+                    console.log(`Order ${order_id} is already PAID or does not exist, ignoring webhook.`);
                 }
             }
         }
 
-        // Handle payment failure
         if (type === "PAYMENT_FAILED_WEBHOOK") {
             const { order_id } = data.payment;
 
@@ -86,6 +68,7 @@ export async function POST(request: NextRequest) {
                 where: { id: order_id },
                 data: {
                     paymentStatus: "FAILED",
+                    status: "Rejected"
                 },
             });
 
@@ -93,8 +76,8 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Webhook processing error:", error);
+    } catch (error: any) {
+        console.error("Webhook processing error:", error?.message || error);
         return NextResponse.json(
             { error: "Webhook processing failed" },
             { status: 500 }
