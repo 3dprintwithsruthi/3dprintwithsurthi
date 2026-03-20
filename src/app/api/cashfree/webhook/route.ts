@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
                             where: { id: order_id },
                             data: {
                                 paymentStatus: "PAID",
-                                paymentId: cf_payment_id,
-                                status: "Accepted" // Move to confirmed automatically
+                                paymentId: String(cf_payment_id),
+                                status: "Accepted" // Update Supabase Status enum
                             },
                         });
                         for (const item of existingOrder.orderItems) {

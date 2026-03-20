@@ -65,7 +65,7 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                                 where: { id: orderId },
                                 data: {
                                     paymentStatus: "PAID",
-                                    paymentId: latestPayment.cf_payment_id,
+                                    paymentId: String(latestPayment.cf_payment_id),
                                     status: "Accepted"
                                 },
                             });
