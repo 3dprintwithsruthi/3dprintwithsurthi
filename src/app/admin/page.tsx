@@ -14,9 +14,18 @@ export default async function AdminDashboardPage() {
   const [productCount, userCount, orderCount, revenueResult] = await Promise.all([
     prisma.product.count(),
     prisma.user.count(),
-    prisma.order.count(),
+    prisma.order.count({
+      where: {
+        OR: [{ paymentMethod: "COD" }, { paymentStatus: "PAID" }]
+      }
+    }),
     prisma.order.aggregate({
-      where: { status: { not: "Rejected" } },
+      where: { 
+        AND: [
+          { status: { not: "Rejected" } },
+          { OR: [{ paymentMethod: "COD" }, { paymentStatus: "PAID" }] }
+        ]
+      },
       _sum: { totalAmount: true },
     }),
   ]);
