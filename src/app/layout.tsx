@@ -2,6 +2,7 @@
  * Root layout – SessionProvider, conditional navbar, cart (lazy), prefetch
  */
 import type { Metadata, Viewport } from "next";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
@@ -9,8 +10,14 @@ import { CartSidePanelWrapper } from "@/components/layout/cart-side-panel-wrappe
 import { Footer } from "@/components/layout/footer";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 
+const outfit = Outfit({ 
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
+});
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://3dprintwithsruthi.in'),
   title: {
     default: "3D Print with Sruthi | Custom 3D Print Services",
     template: "%s | Sruthi 3D Print"
@@ -30,7 +37,7 @@ export const metadata: Metadata = {
     "3D models",
     "rapid prototyping"
   ],
-  authors: [{ name: "Sruthi", url: "https://3dprintwithsruthi.com" }],
+  authors: [{ name: "Sruthi", url: "https://3dprintwithsruthi.in" }],
   creator: "Sruthi",
   publisher: "3D Print with Sruthi",
   alternates: {
@@ -48,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+    url: process.env.NEXTAUTH_URL || 'https://3dprintwithsruthi.in',
     siteName: "Sruthi 3D Print",
     title: "3D Print with Sruthi | Custom 3D Print Services",
     description: "Looking for high-quality 3d print services? 3D Print with Sruthi provides custom 3D printing, prototypes, and personalized gifts.",
@@ -96,7 +103,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning={true}>
+      <body suppressHydrationWarning={true} className={`${outfit.className} ${outfit.variable}`}>
         <AuthSessionProvider>
           <AnalyticsTracker />
           <ConditionalNavbar />
