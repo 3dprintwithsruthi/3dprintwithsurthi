@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 export default async function AdminDashboardPage() {
   const [productCount, userCount, orderCount, revenueResult] = await Promise.all([
     prisma.product.count(),
-    prisma.user.count(),
+    prisma.user.count({ where: { role: "USER" } }),
     prisma.order.count({
       where: { status: { not: "Rejected" } }
     }),

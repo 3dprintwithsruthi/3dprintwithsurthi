@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        if (type === "PAYMENT_FAILED_WEBHOOK") {
+        if (["PAYMENT_FAILED_WEBHOOK", "PAYMENT_USER_DROPPED_WEBHOOK"].includes(type)) {
             const { order_id } = data.payment;
 
             await prisma.order.update({
