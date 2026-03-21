@@ -31,9 +31,9 @@ export function getOptimizedImageUrl(url: string): string {
 
     const fileId = getDriveFileId(url);
     if (fileId) {
-        // Return high-res thumbnail URL which acts as a direct image link
-        // This often redirects to lh3.googleusercontent.com
-        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        // Use the official Google Drive direct content endpoint
+        // This guarantees the image resolves immediately in Next/Image without auth walls
+        return `https://drive.google.com/uc?export=view&id=${fileId}`;
     }
 
     return url;

@@ -39,9 +39,19 @@ export default async function AdminOrdersPage() {
                   {order.user.name} – {order.user.email}
                   {(order.user as any).phone && <span className="ml-2 text-gray-600 font-medium">({(order.user as any).phone})</span>}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-2">
                   {new Date(order.createdAt).toLocaleString()} · {formatPrice(order.totalAmount)}
                 </p>
+                <div className="flex gap-2 items-center">
+                  <span className={`px-2.5 py-1 rounded text-xs font-bold ${order.paymentMethod === 'ONLINE' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {order.paymentMethod === 'ONLINE' ? 'Online Payment' : 'Cash on Delivery'}
+                  </span>
+                  {order.paymentMethod === 'ONLINE' && (
+                    <span className={`px-2.5 py-1 rounded text-xs font-bold ${order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      Status: {order.paymentStatus}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
