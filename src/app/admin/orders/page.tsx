@@ -42,8 +42,8 @@ export default async function AdminOrdersPage() {
                 <p className="text-sm text-gray-600 mb-2">
                   {new Date(order.createdAt).toLocaleString()} · {formatPrice(order.totalAmount)}
                 </p>
-                <div className="flex gap-2 items-center">
-                  <span className={`px-2.5 py-1 rounded text-xs font-bold ${order.paymentMethod === 'ONLINE' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
+                <div className="flex gap-2 items-center text-xs font-bold">
+                  <span className={`px-2.5 py-1 rounded ${order.paymentMethod === 'ONLINE' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
                     {order.paymentMethod === 'ONLINE' ? 'Online Payment' : 'Cash on Delivery'}
                   </span>
                 </div>
