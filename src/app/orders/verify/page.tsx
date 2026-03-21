@@ -7,6 +7,7 @@ import cashfree from "@/lib/cashfree";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import { CheckCircle, XCircle, Loader2, Sparkles } from "lucide-react";
 import { ClearCartClient } from "./clear-cart-client";
+import { sendOrderStatusEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -26,6 +27,7 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
     const order = await prisma.order.findUnique({
         where: { id: orderId },
         include: {
+            user: true,
             orderItems: {
                 include: {
                     product: true,
@@ -78,6 +80,9 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                         });
 
                         await pushOrderToShiprocket(orderId);
+                        
+                        // Send confirmation email
+                        await sendOrderStatusEmail(order as any, "Accepted");
                     }
                 } else if (["FAILED", "CANCELLED", "USER_DROPPED", "VOID"].includes(paymentStatus)) {
                     await prisma.order.update({

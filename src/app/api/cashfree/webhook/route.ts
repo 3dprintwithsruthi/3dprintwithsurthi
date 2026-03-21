@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import cashfree from "@/lib/cashfree";
+import { sendOrderStatusEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
             if (payment_status === "SUCCESS") {
                 const existingOrder = await prisma.order.findUnique({
                     where: { id: order_id },
-                    include: { orderItems: true }
+                    include: { user: true, orderItems: { include: { product: true } } }
                 });
 
                 if (existingOrder && existingOrder.paymentStatus !== "PAID") {
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
                     console.log(`Order ${order_id} marked as PAID and stock decremented. Pushing to Shiprocket...`);
                     // Ensure shiprocket only gets hit once
                     await pushOrderToShiprocket(order_id);
+                    
+                    // Send Email Notification for Asynchronous Payment
+                    await sendOrderStatusEmail(existingOrder as any, "Accepted");
                 } else {
                     console.log(`Order ${order_id} is already PAID or does not exist, ignoring webhook.`);
                 }

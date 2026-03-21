@@ -207,6 +207,14 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     } else {
       // If paymentMethod is COD, push to Shiprocket immediately
       await pushOrderToShiprocket(order.id);
+      
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { user: true, orderItems: { include: { product: true } } }
+      });
+      if (fullOrder) {
+        await sendOrderStatusEmail(fullOrder as any, "Accepted");
+      }
     }
 
     revalidatePath("/");
