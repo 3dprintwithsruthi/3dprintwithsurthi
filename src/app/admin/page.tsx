@@ -15,17 +15,10 @@ export default async function AdminDashboardPage() {
     prisma.product.count(),
     prisma.user.count(),
     prisma.order.count({
-      where: {
-        OR: [{ paymentMethod: "COD" }, { paymentStatus: "PAID" }]
-      }
+      where: { status: { not: "Rejected" } }
     }),
     prisma.order.aggregate({
-      where: { 
-        AND: [
-          { status: { not: "Rejected" } },
-          { OR: [{ paymentMethod: "COD" }, { paymentStatus: "PAID" }] }
-        ]
-      },
+      where: { status: { not: "Rejected" } },
       _sum: { totalAmount: true },
     }),
   ]);
