@@ -85,6 +85,9 @@ model Order {
   paymentStatus String   @default("PENDING") // PENDING, PAID, FAILED
   paymentMethod String   @default("COD")     // COD, ONLINE
 
+  // Shipping
+  awbNumber     String?
+
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
 

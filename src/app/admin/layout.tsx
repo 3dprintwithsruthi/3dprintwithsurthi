@@ -2,12 +2,13 @@
  * Admin layout – sidebar nav, protected by middleware (ADMIN only)
  */
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingBag, Users, BarChart3, Tag } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users, BarChart3, Tag, Truck } from "lucide-react";
 
 const nav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/shipping", label: "Shipping", icon: Truck },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: Tag },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },

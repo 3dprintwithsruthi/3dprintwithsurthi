@@ -258,3 +258,44 @@ export async function updateOrderStatusAction(
   revalidatePath("/orders");
   return { success: true, orderId };
 }
+
+/** Admin only: Add AWB Number and automatically trigger email */
+export async function updateOrderAWBAction(
+  orderId: string,
+  awbNumber: string
+): Promise<OrderActionResult> {
+  const session = await getSession();
+  if ((session?.user as { role?: string })?.role !== "ADMIN") {
+    return { success: false, error: "Only admin can update AWB number" };
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      orderItems: { include: { product: true } },
+      user: true,
+    },
+  });
+  if (!order) return { success: false, error: "Order not found" };
+
+  // Note: if status isn't Shipped, we normally move it to Shipped too,
+  // but let's just update the AWB and optionally change status to Shipped if they want.
+  const updatedOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { 
+      awbNumber, 
+      status: "Shipped" // inherently becomes Shipped when AWB is attached
+    },
+    include: {
+      orderItems: { include: { product: true } },
+      user: true,
+    },
+  });
+
+  // Always re-trigger the Shipped email so they get the fresh tracking link
+  await sendOrderStatusEmail(updatedOrder as any, "Shipped");
+  revalidatePath("/admin/shipping");
+  revalidatePath("/admin/orders");
+  revalidatePath("/orders");
+  return { success: true, orderId };
+}

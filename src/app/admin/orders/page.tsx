@@ -8,10 +8,19 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import { OrderStatusSelect } from "./order-status-select";
 import { DeleteOrderButton } from "./delete-order-button";
+import Link from "next/link";
+import { OrderStatus } from "@prisma/client";
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: { status?: string };
+}) {
+  const currentStatusFilter = searchParams.status || "All";
+
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
+    where: currentStatusFilter !== "All" ? { status: currentStatusFilter as OrderStatus } : undefined,
     include: {
       user: { select: { id: true, name: true, email: true } },
       orderItems: { include: { product: true } },
@@ -20,10 +29,40 @@ export default async function AdminOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-      <p className="mt-1 text-gray-600">Update status to trigger email to customer.</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+        <p className="mt-1 text-gray-600">Filter, view, and update customer order statuses.</p>
+      </div>
 
-      <div className="mt-6 space-y-6">
+      <div className="mb-6 flex flex-wrap gap-2 pb-4 border-b border-gray-200">
+        {[
+          { id: "All", label: "All Orders" },
+          { id: "Pending", label: "Pending" },
+          { id: "Accepted", label: "Confirmed" },
+          { id: "InProgress", label: "Processing" },
+          { id: "Shipped", label: "Shipping" },
+          { id: "Delivered", label: "Delivered" },
+          { id: "Rejected", label: "Cancelled" },
+        ].map((tab) => {
+          const isActive = currentStatusFilter === tab.id;
+          return (
+            <Link
+              key={tab.id}
+              href={tab.id === "All" ? "/admin/orders" : "/admin/orders?status=" + tab.id}
+              className={
+                "px-4 py-2 rounded-full text-sm font-bold transition-all " +
+                (isActive
+                  ? "bg-gray-900 text-white shadow-md cursor-default pointer-events-none"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+              }
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="space-y-6">
         {orders.map((order) => (
           <div key={order.id} className="card-rounded overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b bg-gray-50/50 p-4">

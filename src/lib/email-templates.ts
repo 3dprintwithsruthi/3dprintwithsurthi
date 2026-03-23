@@ -112,7 +112,7 @@ export function generateInProgressEmail(order: OrderWithItems, domain: string) {
   const content = `
     <h2 style="color:#111827; margin-top:0;">We're printing your order! 🖨️</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Great news! Your 3D models are currently being prepared and printed with precision. We are carefully monitoring the quality.</p>
+    <p>Great news! Your order is currently being prepared. We are carefully monitoring the quality.</p>
     <p>We'll send you another update with tracking details as soon as it's ready to be shipped.</p>
     ${buildItemsTable(order)}
     <div style="text-align:center">
@@ -126,13 +126,29 @@ export function generateShippedEmail(order: OrderWithItems, domain: string) {
   const content = `
     <h2 style="color:#111827; margin-top:0;">Your order is on the way! 🚚</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your beautiful 3D prints have been securely packaged and dispatched to our delivery partners.</p>
+    <p>Your pricious order have been securely packaged and dispatched to our delivery partners.</p>
+    ${order.awbNumber ? `
+    <div style="background-color:#eff6ff; border:1px solid #bfdbfe; padding:20px; border-radius:8px; margin:24px 0; text-align:center;">
+      <h3 style="margin:0 0 12px 0; color:#1d4ed8; font-size:18px;">Track Your Package</h3>
+      <p style="margin:0 0 4px 0; font-size:14px; color:#3b82f6; text-transform:uppercase; font-weight:700">AWB Number</p>
+      <p style="margin:0 0 16px 0; font-size:24px; font-weight:bold; color:#1e3a8a; letter-spacing:1px; font-family:monospace;">${order.awbNumber}</p>
+      <p style="margin:0 0 12px 0; color:#475569; font-size:14px; text-align:left;"><strong>How to track:</strong></p>
+      <ol style="margin:0 0 16px 0; color:#475569; font-size:14px; padding-left:20px; text-align:left;">
+        <li>Visit the ST Courier tracking page.</li>
+        <li>Enter your AWB number above.</li>
+        <li>View your live status!</li>
+      </ol>
+      <a href="https://www.stcourier.com/track/shipment" class="btn" style="background-color:#3b82f6; width:100%; box-sizing:border-box; border-radius:6px; margin-top:0;">Track on ST Courier &rarr;</a>
+    </div>
+    ` : ''}
     <p><strong>Shipping Address:</strong><br/>
     <span style="color:#6b7280">${order.address.replace(/\n/g, '<br/>')}</span></p>
     ${buildItemsTable(order)}
+    ${!order.awbNumber ? `
     <div style="text-align:center">
       <a href="${domain}/orders" class="btn">Track Delivery</a>
     </div>
+    ` : ''}
   `;
   return wrapEmail(content, `Good news! Your order #${order.id.slice(-8)} has shipped.`);
 }
@@ -141,7 +157,7 @@ export function generateDeliveredEmail(order: OrderWithItems, domain: string) {
   const content = `
     <h2 style="color:#111827; margin-top:0;">Your order has arrived! 🎁</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your package has been successfully delivered. We hope you love your new 3D printed products as much as we loved making them for you!</p>
+    <p>Your package has been successfully delivered. We hope you love your new products as much as we loved making them for you!</p>
     <p>If you have a moment, we'd greatly appreciate any feedback or photos of your items in action. Just reply to this email!</p>
     ${buildItemsTable(order)}
   `;
