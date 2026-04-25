@@ -8,30 +8,33 @@ import type { OrderStatus } from "@prisma/client";
 function wrapEmail(content: string, preheader: string) {
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Order Update</title>
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 0; }
-    .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 32px 24px; text-align: center; }
-    .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-    .content { padding: 32px 24px; color: #374151; font-size: 16px; line-height: 1.6; }
-    .table-wrapper { margin: 24px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+    .wrapper { background-color: #f4f4f5; padding: 40px 20px; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    .header { padding: 40px 32px; text-align: center; border-bottom: 1px solid #f4f4f5; }
+    .header h1 { color: #18181b; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
+    .content { padding: 40px 32px; color: #3f3f46; font-size: 16px; line-height: 1.6; }
+    .table-wrapper { margin: 32px 0; border: 1px solid #e4e4e7; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background-color: #f9fafb; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #4b5563; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 16px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #374151; }
-    .total-row { background-color: #f9fafb; font-weight: 700; }
-    .btn { display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 24px; text-align: center; }
-    .footer { padding: 32px 24px; text-align: center; color: #6b7280; font-size: 14px; background-color: #f9fafb; }
+    th { background-color: #fafafa; padding: 14px 16px; font-size: 13px; font-weight: 600; color: #71717a; border-bottom: 1px solid #e4e4e7; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 16px; border-bottom: 1px solid #e4e4e7; font-size: 15px; color: #27272a; }
+    .total-row td { background-color: #fafafa; font-weight: 600; font-size: 16px; border-bottom: none; }
+    .btn { display: inline-block; background-color: #000000; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; font-size: 15px; transition: background-color 0.2s; }
+    .btn:hover { background-color: #27272a; }
+    .footer { padding: 32px; text-align: center; color: #a1a1aa; font-size: 13px; background-color: #fafafa; border-top: 1px solid #e4e4e7; line-height: 1.5; }
     .preheader { display: none; font-size: 1px; color: #333333; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; }
+    .highlight-box { background-color: #fafafa; border: 1px solid #e4e4e7; padding: 20px; border-radius: 8px; margin: 24px 0; }
   </style>
 </head>
 <body>
   <span class="preheader">${preheader}</span>
-  <div style="background-color: #f9fafb; padding: 20px 0;">
+  <div class="wrapper">
     <div class="container">
       <div class="header">
         <h1>3D Print with Sruthi</h1>
@@ -40,9 +43,9 @@ function wrapEmail(content: string, preheader: string) {
         ${content}
       </div>
       <div class="footer">
-        <p>Thank you for shopping with us!</p>
-        <p>If you have any questions, reply to this email or contact us at 3dprintwithsruthi@gmail.com</p>
-        <p>&copy; ${new Date().getFullYear()} 3D Print with Sruthi. All rights reserved.</p>
+        <p style="margin: 0 0 8px 0;">Thank you for your business!</p>
+        <p style="margin: 0 0 16px 0;">If you have any questions, reply to this email or contact us at <a href="mailto:3dprintwithsruthi@gmail.com" style="color: #000000; text-decoration: underline;">3dprintwithsruthi@gmail.com</a></p>
+        <p style="margin: 0;">&copy; ${new Date().getFullYear()} 3D Print with Sruthi. All rights reserved.</p>
       </div>
     </div>
   </div>
@@ -94,15 +97,20 @@ function buildItemsTable(order: OrderWithItems) {
 
 export function generateAcceptedEmail(order: OrderWithItems, domain: string) {
   const content = `
-    <h2 style="color:#111827; margin-top:0;">Order Confirmed! 🎉</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Order Confirmed 🎉</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Thank you for your order! We've received your request and are getting things ready. We'll notify you once it's in progress.</p>
-    <div style="background-color:#f3f4f6; padding:16px; border-radius:8px; margin: 24px 0;">
-      <p style="margin:0; font-weight:600;">Order ID: <span style="font-family:monospace; color:#4f46e5">#${order.id.slice(-8)}</span></p>
+    <p>Thank you for your purchase! We have successfully received your order and are currently preparing it for you. We will send you another update as soon as it begins processing.</p>
+    
+    <div class="highlight-box">
+      <p style="margin:0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Number</p>
+      <p style="margin:4px 0 0 0; font-size:20px; font-weight:700; color:#18181b; font-family: monospace;">#${order.id.slice(-8)}</p>
     </div>
+    
+    <h3 style="color:#18181b; margin:32px 0 16px 0; font-size:18px;">Order Summary</h3>
     ${buildItemsTable(order)}
-    <div style="text-align:center">
-      <a href="${domain}/orders" class="btn">View Order Details</a>
+    
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="${domain}/orders" class="btn">View Order Status</a>
     </div>
   `;
   return wrapEmail(content, `Your order #${order.id.slice(-8)} has been confirmed!`);
@@ -110,43 +118,70 @@ export function generateAcceptedEmail(order: OrderWithItems, domain: string) {
 
 export function generateInProgressEmail(order: OrderWithItems, domain: string) {
   const content = `
-    <h2 style="color:#111827; margin-top:0;">We're printing your order! 🖨️</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">We're working on your order 🖨️</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Great news! Your order is currently being prepared. We are carefully monitoring the quality.</p>
-    <p>We'll send you another update with tracking details as soon as it's ready to be shipped.</p>
+    <p>Great news! Your 3D prints are currently in production. We are carefully monitoring the quality of your items to ensure they meet our highest standards.</p>
+    <p>We'll notify you with tracking details the moment your package is ready to ship.</p>
+    
     ${buildItemsTable(order)}
-    <div style="text-align:center">
-      <a href="${domain}/orders" class="btn">Track Order Status</a>
+    
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="${domain}/orders" class="btn">Check Progress</a>
     </div>
   `;
-  return wrapEmail(content, `Your order #${order.id.slice(-8)} is now in progress!`);
+  return wrapEmail(content, `Your order #${order.id.slice(-8)} is now in production!`);
 }
 
 export function generateShippedEmail(order: OrderWithItems, domain: string) {
   const content = `
-    <h2 style="color:#111827; margin-top:0;">Your order is on the way! 🚚</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your order is on the way! 🚚</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your pricious order have been securely packaged and dispatched to our delivery partners.</p>
+    <p>Your beautiful 3D prints have been securely packaged and handed over to our delivery partners.</p>
+    
     ${order.awbNumber ? `
-    <div style="background-color:#eff6ff; border:1px solid #bfdbfe; padding:20px; border-radius:8px; margin:24px 0; text-align:center;">
-      <h3 style="margin:0 0 12px 0; color:#1d4ed8; font-size:18px;">Track Your Package</h3>
-      <p style="margin:0 0 4px 0; font-size:14px; color:#3b82f6; text-transform:uppercase; font-weight:700">AWB Number</p>
-      <p style="margin:0 0 16px 0; font-size:24px; font-weight:bold; color:#1e3a8a; letter-spacing:1px; font-family:monospace;">${order.awbNumber}</p>
-      <p style="margin:0 0 12px 0; color:#475569; font-size:14px; text-align:left;"><strong>How to track:</strong></p>
-      <ol style="margin:0 0 16px 0; color:#475569; font-size:14px; padding-left:20px; text-align:left;">
-        <li>Visit the ST Courier tracking page.</li>
-        <li>Enter your AWB number above.</li>
-        <li>View your live status!</li>
-      </ol>
-      <a href="https://www.stcourier.com/track/shipment" class="btn" style="background-color:#3b82f6; width:100%; box-sizing:border-box; border-radius:6px; margin-top:0;">Track on ST Courier &rarr;</a>
+    <div class="highlight-box" style="text-align:center; background-color: #fafafa; border-color: #e4e4e7;">
+      <p style="margin:0 0 8px 0; font-size:13px; color:#71717a; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Tracking Number (AWB)</p>
+      <p style="margin:0 0 20px 0; font-size:28px; font-weight:800; color:#18181b; letter-spacing:1px; font-family:monospace;">${order.awbNumber}</p>
+      
+      <div style="text-align: left; background: #ffffff; padding: 16px; border-radius: 6px; border: 1px solid #e4e4e7;">
+        <p style="margin:0 0 8px 0; color:#18181b; font-size:14px; font-weight:600;">How to track your package:</p>
+        <ol style="margin:0; padding-left:20px; color:#52525b; font-size:14px; line-height: 1.5;">
+          <li>Click the tracking button below to visit the Courier portal.</li>
+          <li>Enter your tracking number shown above.</li>
+          <li>View your real-time delivery status!</li>
+        </ol>
+      </div>
+      <a href="https://www.stcourier.com/track/shipment" class="btn" style="display:block; margin-top:20px;">Track on Courier Portal</a>
     </div>
     ` : ''}
-    <p><strong>Shipping Address:</strong><br/>
-    <span style="color:#6b7280">${order.address.replace(/\n/g, '<br/>')}</span></p>
+    
+    <div style="margin: 32px 0;">
+      <h3 style="color:#18181b; margin:0 0 12px 0; font-size:16px;">Shipping Address</h3>
+      <div style="margin:0; color:#52525b; line-height: 1.5; font-size: 14px; background: #ffffff; padding: 16px; border-radius: 8px; border: 1px solid #e4e4e7;">
+        ${(() => {
+          if (!order.address) return "No address provided";
+          try {
+            const addr = JSON.parse(order.address);
+            return `
+              <strong style="color:#18181b; font-size: 15px;">${addr.fullName}</strong><br/>
+              ${addr.addressLine1}<br/>
+              ${addr.addressLine2 ? addr.addressLine2 + '<br/>' : ''}
+              ${addr.city}, ${addr.state} ${addr.pincode}<br/>
+              <span style="color:#71717a; margin-top: 8px; display: inline-block;">Phone: ${addr.phone}</span>
+            `;
+          } catch(e) {
+            return order.address.replace(/\n/g, '<br/>');
+          }
+        })()}
+      </div>
+    </div>
+    
+    <h3 style="color:#18181b; margin:32px 0 16px 0; font-size:18px;">Items in this shipment</h3>
     ${buildItemsTable(order)}
+    
     ${!order.awbNumber ? `
-    <div style="text-align:center">
-      <a href="${domain}/orders" class="btn">Track Delivery</a>
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="${domain}/orders" class="btn">Track Delivery Status</a>
     </div>
     ` : ''}
   `;
@@ -155,23 +190,42 @@ export function generateShippedEmail(order: OrderWithItems, domain: string) {
 
 export function generateDeliveredEmail(order: OrderWithItems, domain: string) {
   const content = `
-    <h2 style="color:#111827; margin-top:0;">Your order has arrived! 🎁</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your order has arrived! 🎁</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your package has been successfully delivered. We hope you love your new products as much as we loved making them for you!</p>
-    <p>If you have a moment, we'd greatly appreciate any feedback or photos of your items in action. Just reply to this email!</p>
+    <p>Your package has been successfully delivered! We hope you love your new 3D printed items as much as we loved making them for you.</p>
+    
+    <div class="highlight-box">
+      <p style="margin:0; color:#3f3f46;">If you have a moment, we'd greatly appreciate any feedback or photos of your items in action. Just reply directly to this email!</p>
+    </div>
+    
     ${buildItemsTable(order)}
+    
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="${domain}" class="btn">Shop Again</a>
+    </div>
   `;
   return wrapEmail(content, `Your order #${order.id.slice(-8)} has been delivered!`);
 }
 
 export function generateGenericStatusEmail(order: OrderWithItems, status: string, domain: string) {
   const content = `
-    <h2 style="color:#111827; margin-top:0;">Order Status Update</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Order Status Update</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your order <strong>#${order.id.slice(-8)}</strong> has been updated to: <strong style="color:#4f46e5">${status}</strong>.</p>
+    <p>There has been an update regarding your recent order.</p>
+    
+    <div class="highlight-box">
+      <p style="margin:0 0 4px 0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Number</p>
+      <p style="margin:0 0 16px 0; font-size:20px; font-weight:700; color:#18181b; font-family: monospace;">#${order.id.slice(-8)}</p>
+      
+      <p style="margin:0 0 4px 0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">New Status</p>
+      <p style="margin:0; font-size:20px; font-weight:800; color:#4f46e5;">${status}</p>
+    </div>
+    
+    <h3 style="color:#18181b; margin:32px 0 16px 0; font-size:18px;">Order Details</h3>
     ${buildItemsTable(order)}
-    <div style="text-align:center">
-      <a href="${domain}/orders" class="btn">View Order Details</a>
+    
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="${domain}/orders" class="btn">View Complete Details</a>
     </div>
   `;
   return wrapEmail(content, `Update on your order #${order.id.slice(-8)}`);

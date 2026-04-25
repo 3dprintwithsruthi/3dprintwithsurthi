@@ -41,6 +41,8 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     return { success: false, error: "You must be logged in to place an order" };
   }
   const userId = (session.user as { id: string }).id;
+  const role = (session.user as { role?: string }).role || "USER";
+  const isAdminBypass = role === "ADMIN";
 
   const addressRaw = {
     fullName: formData.get("fullName"),
@@ -119,13 +121,13 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
       const order = await tx.order.create({
         data: {
           userId,
-          status: "Pending",
+          status: isAdminBypass ? "Accepted" : "Pending",
           totalAmount: new Decimal(totalAmount),
           discount: new Decimal(discount),
           couponCode: discount > 0 ? couponCode : null,
           address: addressStr,
           paymentMethod,
-          paymentStatus: paymentMethod === "ONLINE" ? "PENDING" : "PENDING", // PENDING for both initially
+          paymentStatus: isAdminBypass ? "PAID" : "PENDING",
         },
       });
       await tx.orderItem.createMany({
@@ -137,7 +139,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           customInput: item.customInput,
         })),
       });
-      if (paymentMethod === "COD") {
+      if (paymentMethod === "COD" || isAdminBypass) {
         for (const item of cart) {
           await tx.product.update({
             where: { id: item.productId },
@@ -157,7 +159,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
       return order;
     });
 
-    if (paymentMethod === "ONLINE") {
+    if (paymentMethod === "ONLINE" && !isAdminBypass) {
       try {
         const headersList = await headers();
         const host = headersList.get("host");
@@ -205,16 +207,16 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
         return { success: false, error: `Payment Gateway Error: ${cfErrorMsg}. Please try Cash on Delivery.` };
       }
     } else {
-      // If paymentMethod is COD, push to Shiprocket immediately
-      await pushOrderToShiprocket(order.id);
-      
-      const fullOrder = await prisma.order.findUnique({
-        where: { id: order.id },
-        include: { user: true, orderItems: { include: { product: true } } }
-      });
-      if (fullOrder) {
-        await sendOrderStatusEmail(fullOrder as any, "Accepted");
-      }
+      // Parallelize Shiprocket push and Email to prevent UI blocking
+      await Promise.all([
+        pushOrderToShiprocket(order.id).catch(e => console.error("Shiprocket action error:", e)),
+        prisma.order.findUnique({
+          where: { id: order.id },
+          include: { user: true, orderItems: { include: { product: true } } }
+        }).then(fullOrder => {
+          if (fullOrder) return sendOrderStatusEmail(fullOrder as any, "Accepted").catch(e => console.error("Email error:", e));
+        })
+      ]);
     }
 
     revalidatePath("/");
@@ -253,7 +255,9 @@ export async function updateOrderStatusAction(
     data: { status: newStatus },
   });
 
-  await sendOrderStatusEmail(order, newStatus);
+  // Dispatch email in background without blocking the UI
+  sendOrderStatusEmail(order, newStatus).catch(e => console.error("Status Update Email Error:", e));
+  
   revalidatePath("/admin/orders");
   revalidatePath("/orders");
   return { success: true, orderId };
@@ -293,7 +297,8 @@ export async function updateOrderAWBAction(
   });
 
   // Always re-trigger the Shipped email so they get the fresh tracking link
-  await sendOrderStatusEmail(updatedOrder as any, "Shipped");
+  sendOrderStatusEmail(updatedOrder as any, "Shipped").catch(e => console.error("AWB Email Error:", e));
+  
   revalidatePath("/admin/shipping");
   revalidatePath("/admin/orders");
   revalidatePath("/orders");

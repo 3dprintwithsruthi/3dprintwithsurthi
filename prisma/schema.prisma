@@ -86,7 +86,11 @@ model Order {
   paymentMethod String   @default("COD")     // COD, ONLINE
 
   // Shipping
-  awbNumber     String?
+  awbNumber            String?
+  shiprocketOrderId    String?
+  shiprocketShipmentId String?
+  courierName          String?
+  trackingUrl          String?
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]

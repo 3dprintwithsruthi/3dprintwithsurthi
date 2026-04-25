@@ -79,10 +79,11 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                             }
                         });
 
-                        await pushOrderToShiprocket(orderId);
-                        
-                        // Send confirmation email
-                        await sendOrderStatusEmail(order as any, "Accepted");
+                        // Run heavy background tasks in parallel to keep UI lightning fast
+                        await Promise.all([
+                            pushOrderToShiprocket(orderId).catch(e => console.error("Shiprocket verification async error:", e)),
+                            sendOrderStatusEmail(order as any, "Accepted").catch(e => console.error("Email verification async error:", e))
+                        ]);
                     }
                 } else if (["FAILED", "CANCELLED", "USER_DROPPED", "VOID"].includes(paymentStatus)) {
                     await prisma.order.update({
@@ -136,8 +137,14 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                     </>
                 ) : isFailure ? (
                     <>
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-                            <XCircle className="h-12 w-12 text-red-600" />
+                        {/* Decorative Background for Failure */}
+                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-red-500/10 to-transparent pointer-events-none" />
+
+                        <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center">
+                            <div className="absolute inset-0 rounded-full bg-red-500 opacity-20 animate-pulse" />
+                            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-2xl shadow-red-500/40">
+                                <XCircle className="h-10 w-10 text-white" />
+                            </div>
                         </div>
                         <h2 className="mb-2 text-2xl font-bold text-gray-900">Payment Unsuccessful</h2>
                         <p className="mb-6 text-gray-600">
@@ -162,8 +169,14 @@ export default async function VerifyPaymentPage({ searchParams }: PageProps) {
                     </>
                 ) : (
                     <>
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
-                            <Loader2 className="h-12 w-12 animate-spin text-amber-600" />
+                        {/* Decorative Background for Pending */}
+                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
+
+                        <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center">
+                            <div className="absolute inset-0 rounded-full bg-amber-500 opacity-20 animate-pulse" />
+                            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 shadow-2xl shadow-amber-500/40">
+                                <Loader2 className="h-10 w-10 text-white animate-spin" />
+                            </div>
                         </div>
                         <h2 className="mb-2 text-2xl font-bold text-gray-900">Payment is Pending</h2>
                         <p className="mb-6 text-gray-600">

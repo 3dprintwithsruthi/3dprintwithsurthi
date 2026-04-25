@@ -53,12 +53,13 @@ export async function POST(request: NextRequest) {
                         }
                     });
 
-                    console.log(`Order ${order_id} marked as PAID and stock decremented. Pushing to Shiprocket...`);
-                    // Ensure shiprocket only gets hit once
-                    await pushOrderToShiprocket(order_id);
+                    console.log(`Order ${order_id} marked as PAID. Executing parallel async integrations...`);
                     
-                    // Send Email Notification for Asynchronous Payment
-                    await sendOrderStatusEmail(existingOrder as any, "Accepted");
+                    // Run Shiprocket push and Email sending simultaneously to prevent webhook timeouts
+                    await Promise.all([
+                        pushOrderToShiprocket(order_id).catch(e => console.error("Shiprocket async error:", e)),
+                        sendOrderStatusEmail(existingOrder as any, "Accepted").catch(e => console.error("Email async error:", e))
+                    ]);
                 } else {
                     console.log(`Order ${order_id} is already PAID or does not exist, ignoring webhook.`);
                 }

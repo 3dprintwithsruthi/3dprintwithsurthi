@@ -121,8 +121,8 @@ export async function sendOrderStatusEmail(
       break;
   }
 
-  // Prevent spamming rejected emails
-  if (newStatus === "Rejected" || newStatus === "Pending") return { ok: true };
+  // Prevent spamming empty Pending emails
+  if (newStatus === "Pending") return { ok: true };
 
   return sendGmail(order.user.email, subject, html);
 }
