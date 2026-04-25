@@ -255,8 +255,8 @@ export async function updateOrderStatusAction(
     data: { status: newStatus },
   });
 
-  // Dispatch email in background without blocking the UI
-  sendOrderStatusEmail(order, newStatus).catch(e => console.error("Status Update Email Error:", e));
+  // MUST await in Vercel otherwise the Serverless Function kills the process before email sends!
+  await sendOrderStatusEmail(order, newStatus).catch(e => console.error("Status Update Email Error:", e));
   
   revalidatePath("/admin/orders");
   revalidatePath("/orders");
@@ -296,8 +296,8 @@ export async function updateOrderAWBAction(
     },
   });
 
-  // Always re-trigger the Shipped email so they get the fresh tracking link
-  sendOrderStatusEmail(updatedOrder as any, "Shipped").catch(e => console.error("AWB Email Error:", e));
+  // MUST await in Vercel
+  await sendOrderStatusEmail(updatedOrder as any, "Shipped").catch(e => console.error("AWB Email Error:", e));
   
   revalidatePath("/admin/shipping");
   revalidatePath("/admin/orders");

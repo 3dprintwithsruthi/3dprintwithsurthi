@@ -121,11 +121,26 @@ export default async function AdminOrdersPage({
                       
                       {item.customInput && typeof item.customInput === "object" && Object.keys(item.customInput).length > 0 && (
                         <div className="mt-2 pl-3 border-l-2 border-indigo-200">
-                          {Object.entries(item.customInput).map(([key, val]) => (
-                            <div key={key} className="text-sm">
-                              <span className="text-gray-500">{key}:</span> <span className="font-medium text-indigo-700">{String(val)}</span>
-                            </div>
-                          ))}
+                          {Object.entries(item.customInput).map(([key, val]) => {
+                            const strVal = String(val);
+                            const isUrl = strVal.startsWith("http://") || strVal.startsWith("https://");
+                            return (
+                              <div key={key} className="text-sm my-1">
+                                <span className="text-gray-500">{key}:</span>{" "}
+                                {isUrl ? (
+                                  <a href={strVal} target="_blank" rel="noreferrer" className="inline-block align-middle ml-1">
+                                    {strVal.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                                      <img src={strVal} alt="Uploaded file" className="h-12 w-12 object-cover rounded border border-gray-200 inline shadow-sm hover:scale-110 transition-transform" />
+                                    ) : (
+                                      <span className="text-indigo-600 underline font-medium break-all">{strVal}</span>
+                                    )}
+                                  </a>
+                                ) : (
+                                  <span className="font-medium text-indigo-700">{strVal}</span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
