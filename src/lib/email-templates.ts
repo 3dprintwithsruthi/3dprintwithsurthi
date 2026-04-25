@@ -95,15 +95,15 @@ function buildItemsTable(order: OrderWithItems) {
 
 /** Specific Email Generators */
 
-export function generateAcceptedEmail(order: OrderWithItems, domain: string) {
+export function generateAcceptedEmail(order: OrderWithItems, domain: string, orderRef: string) {
   const content = `
-    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Order Confirmed 🎉</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Order Confirmed ✓</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Thank you for your purchase! We have successfully received your order and are currently preparing it for you. We will send you another update as soon as it begins processing.</p>
+    <p>Thank you for your purchase. We have successfully received your order and our team is preparing it with care. You will receive another update once production begins.</p>
     
     <div class="highlight-box">
-      <p style="margin:0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Number</p>
-      <p style="margin:4px 0 0 0; font-size:20px; font-weight:700; color:#18181b; font-family: monospace;">#${order.id.slice(-8)}</p>
+      <p style="margin:0; color:#71717a; font-size:13px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Reference</p>
+      <p style="margin:4px 0 0 0; font-size:22px; font-weight:800; color:#18181b; font-family: monospace; letter-spacing: 1px;">${orderRef}</p>
     </div>
     
     <h3 style="color:#18181b; margin:32px 0 16px 0; font-size:18px;">Order Summary</h3>
@@ -113,30 +113,30 @@ export function generateAcceptedEmail(order: OrderWithItems, domain: string) {
       <a href="${domain}/orders" class="btn">View Order Status</a>
     </div>
   `;
-  return wrapEmail(content, `Your order #${order.id.slice(-8)} has been confirmed!`);
+  return wrapEmail(content, `Your order ${orderRef} has been confirmed — 3D Print with Sruthi`);
 }
 
-export function generateInProgressEmail(order: OrderWithItems, domain: string) {
+export function generateInProgressEmail(order: OrderWithItems, domain: string, orderRef: string) {
   const content = `
-    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">We're working on your order 🖨️</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your Order is Being Printed 🖨️</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Great news! Your 3D prints are currently in production. We are carefully monitoring the quality of your items to ensure they meet our highest standards.</p>
-    <p>We'll notify you with tracking details the moment your package is ready to ship.</p>
+    <p>Your 3D prints for order <strong>${orderRef}</strong> are now in active production. We are carefully monitoring quality at every stage to ensure your items meet our highest standards.</p>
+    <p>We will notify you with tracking details the moment your package is ready to ship.</p>
     
     ${buildItemsTable(order)}
     
     <div style="text-align:center; margin-top: 32px;">
-      <a href="${domain}/orders" class="btn">Check Progress</a>
+      <a href="${domain}/orders" class="btn">Check Order Progress</a>
     </div>
   `;
-  return wrapEmail(content, `Your order #${order.id.slice(-8)} is now in production!`);
+  return wrapEmail(content, `Your order ${orderRef} is now in production — 3D Print with Sruthi`);
 }
 
-export function generateShippedEmail(order: OrderWithItems, domain: string) {
+export function generateShippedEmail(order: OrderWithItems, domain: string, orderRef: string) {
   const content = `
-    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your order is on the way! 🚚</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your Order is On Its Way 🚚</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your beautiful 3D prints have been securely packaged and handed over to our delivery partners.</p>
+    <p>Excellent news! Order <strong>${orderRef}</strong> has been securely packaged and dispatched to our delivery partner.
     
     ${order.awbNumber ? `
     <div class="highlight-box" style="text-align:center; background-color: #fafafa; border-color: #e4e4e7;">
@@ -185,14 +185,14 @@ export function generateShippedEmail(order: OrderWithItems, domain: string) {
     </div>
     ` : ''}
   `;
-  return wrapEmail(content, `Good news! Your order #${order.id.slice(-8)} has shipped.`);
+  return wrapEmail(content, `Order ${orderRef} has shipped — track your delivery`);
 }
 
-export function generateDeliveredEmail(order: OrderWithItems, domain: string) {
+export function generateDeliveredEmail(order: OrderWithItems, domain: string, orderRef: string) {
   const content = `
-    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your order has arrived! 🎁</h2>
+    <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Your Order Has Arrived 📦</h2>
     <p>Hi ${order.user.name},</p>
-    <p>Your package has been successfully delivered! We hope you love your new 3D printed items as much as we loved making them for you.</p>
+    <p>Order <strong>${orderRef}</strong> has been successfully delivered! We hope you love your new 3D printed items as much as we loved making them for you.</p>
     
     <div class="highlight-box">
       <p style="margin:0; color:#3f3f46;">If you have a moment, we'd greatly appreciate any feedback or photos of your items in action. Just reply directly to this email!</p>
@@ -204,20 +204,20 @@ export function generateDeliveredEmail(order: OrderWithItems, domain: string) {
       <a href="${domain}" class="btn">Shop Again</a>
     </div>
   `;
-  return wrapEmail(content, `Your order #${order.id.slice(-8)} has been delivered!`);
+  return wrapEmail(content, `Order ${orderRef} delivered — thank you for shopping with 3D Print with Sruthi`);
 }
 
-export function generateGenericStatusEmail(order: OrderWithItems, status: string, domain: string) {
+export function generateGenericStatusEmail(order: OrderWithItems, status: string, domain: string, orderRef: string) {
   const content = `
     <h2 style="color:#18181b; margin-top:0; font-size: 24px;">Order Status Update</h2>
     <p>Hi ${order.user.name},</p>
     <p>There has been an update regarding your recent order.</p>
     
     <div class="highlight-box">
-      <p style="margin:0 0 4px 0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Number</p>
-      <p style="margin:0 0 16px 0; font-size:20px; font-weight:700; color:#18181b; font-family: monospace;">#${order.id.slice(-8)}</p>
+      <p style="margin:0 0 4px 0; color:#71717a; font-size:13px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Order Reference</p>
+      <p style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#18181b; font-family: monospace; letter-spacing: 1px;">${orderRef}</p>
       
-      <p style="margin:0 0 4px 0; color:#71717a; font-size:14px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">New Status</p>
+      <p style="margin:0 0 4px 0; color:#71717a; font-size:13px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Status</p>
       <p style="margin:0; font-size:20px; font-weight:800; color:#4f46e5;">${status}</p>
     </div>
     
@@ -228,5 +228,5 @@ export function generateGenericStatusEmail(order: OrderWithItems, status: string
       <a href="${domain}/orders" class="btn">View Complete Details</a>
     </div>
   `;
-  return wrapEmail(content, `Update on your order #${order.id.slice(-8)}`);
+  return wrapEmail(content, `Status update on order ${orderRef} — 3D Print with Sruthi`);
 }

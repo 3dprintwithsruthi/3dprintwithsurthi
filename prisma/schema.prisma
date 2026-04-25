@@ -71,9 +71,10 @@ model Coupon {
 // Order – status workflow (Pending → … → Delivered / Rejected)
 // ----------------------------------------
 model Order {
-  id          String   @id @default(cuid())
-  userId      String
-  status      OrderStatus @default(Pending)
+  id            String   @id @default(cuid())
+  orderNumber   Int      @default(autoincrement()) // Formatted as 3DPS{1000 + orderNumber}
+  userId        String
+  status        OrderStatus @default(Pending)
   totalAmount Decimal  @db.Decimal(10, 2)
   discount    Decimal  @default(0) @db.Decimal(10, 2)
   couponCode    String?

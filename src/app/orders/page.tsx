@@ -66,9 +66,11 @@ export default async function OrdersPage({
                   <li key={item.id} className="flex justify-between py-2 text-sm">
                     <span>
                       {item.product.name} × {item.quantity}
-                      {item.customInput && Object.keys(item.customInput as object).length > 0 && (
-                        <span className="ml-2 text-gray-500">
-                          ({JSON.stringify(item.customInput)})
+                      {item.customInput && typeof item.customInput === "object" && Object.keys(item.customInput as object).length > 0 && (
+                        <span className="ml-2 text-gray-500 text-xs">
+                          ({Object.entries(item.customInput as Record<string, string>)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(", ")})
                         </span>
                       )}
                     </span>

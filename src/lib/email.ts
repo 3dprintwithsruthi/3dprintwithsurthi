@@ -1,14 +1,14 @@
 /**
  * Email service – Google Gmail API with OAuth2
- * Rebuilt for production reliability:
- *  - Uses order.notifyEmail (customer-provided) OR order.user.email
- *  - Exponential backoff retry (3 attempts)
- *  - Detailed server logs for every send attempt
- *  - Sends on all statuses except "Pending"
+ * - Uses order.notifyEmail (entered at checkout) or order.user.email as fallback
+ * - Professional, branded subjects using 3DPS order number format
+ * - Exponential backoff (3 attempts) with detailed server logging
+ * - Sends for: Accepted, InProgress, Shipped, Delivered, Rejected
  */
 import { google } from "googleapis";
 import type { OrderStatus } from "@prisma/client";
 import type { OrderWithItems } from "@/types";
+import { formatOrderNumber } from "@/lib/utils";
 import {
   generateAcceptedEmail,
   generateInProgressEmail,
@@ -17,6 +17,9 @@ import {
   generateGenericStatusEmail,
 } from "./email-templates";
 
+// ─────────────────────────────────────────────
+// Gmail OAuth2 client factory
+// ─────────────────────────────────────────────
 function createGmailClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -24,22 +27,25 @@ function createGmailClient() {
 
   if (!clientId || !clientSecret || !refreshToken) {
     throw new Error(
-      `[Gmail] Missing OAuth2 env vars. Got: clientId=${!!clientId}, clientSecret=${!!clientSecret}, refreshToken=${!!refreshToken}`
+      `[Gmail] Missing OAuth2 credentials. Configured: clientId=${!!clientId}, secret=${!!clientSecret}, refreshToken=${!!refreshToken}`
     );
   }
 
   const OAuth2 = google.auth.OAuth2;
-  const oauth2Client = new OAuth2(
+  const auth = new OAuth2(
     clientId,
     clientSecret,
     "https://developers.google.com/oauthplayground"
   );
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
-  return google.gmail({ version: "v1", auth: oauth2Client });
+  auth.setCredentials({ refresh_token: refreshToken });
+  return google.gmail({ version: "v1", auth });
 }
 
-function encodeRawEmail(to: string, subject: string, html: string, from: string): string {
-  const raw = [
+// ─────────────────────────────────────────────
+// Encode raw MIME email for Gmail API
+// ─────────────────────────────────────────────
+function buildRawEmail(to: string, from: string, subject: string, html: string): string {
+  const mime = [
     `From: "3D Print with Sruthi" <${from}>`,
     `To: ${to}`,
     `Subject: ${subject}`,
@@ -49,13 +55,16 @@ function encodeRawEmail(to: string, subject: string, html: string, from: string)
     html,
   ].join("\r\n");
 
-  return Buffer.from(raw, "utf8")
+  return Buffer.from(mime, "utf8")
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
 
+// ─────────────────────────────────────────────
+// Core send function with retry + logging
+// ─────────────────────────────────────────────
 async function sendGmail(
   to: string,
   subject: string,
@@ -64,91 +73,115 @@ async function sendGmail(
   const senderEmail = process.env.MAIL_FROM || process.env.SMTP_USER;
 
   if (!senderEmail) {
-    console.warn("[Gmail] Skipping — MAIL_FROM / SMTP_USER not set");
-    return { ok: false, error: "MAIL_FROM not set" };
+    console.warn("[Gmail] ⚠️  Skipping — MAIL_FROM not set in environment variables");
+    return { ok: false, error: "MAIL_FROM env var not set" };
   }
 
-  const encodedMessage = encodeRawEmail(to, subject, html, senderEmail);
+  const raw = buildRawEmail(to, senderEmail, subject, html);
+  const MAX = 3;
 
-  const MAX_ATTEMPTS = 3;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 1; attempt <= MAX; attempt++) {
     try {
       const gmail = createGmailClient();
       await gmail.users.messages.send({
         userId: "me",
-        requestBody: { raw: encodedMessage },
+        requestBody: { raw },
       });
-      console.log(`[Gmail] ✅ Sent "${subject}" → ${to} (attempt ${attempt})`);
+      console.log(`[Gmail] ✅ Sent (attempt ${attempt}/${MAX}): "${subject}" → ${to}`);
       return { ok: true };
     } catch (err: any) {
-      const msg = err?.message || String(err);
-      console.error(`[Gmail] ❌ Attempt ${attempt}/${MAX_ATTEMPTS} failed for ${to}: ${msg}`);
-      if (attempt === MAX_ATTEMPTS) {
+      const msg: string = err?.message || String(err);
+      console.error(`[Gmail] ❌ Attempt ${attempt}/${MAX} failed → ${to}: ${msg}`);
+      if (attempt === MAX) {
         return { ok: false, error: msg };
       }
-      // Exponential backoff: 1s → 2s → 4s
-      await new Promise((res) => setTimeout(res, 1000 * Math.pow(2, attempt - 1)));
+      // Exponential backoff: 1s, 2s
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
   }
 
   return { ok: false, error: "Max retries exceeded" };
 }
 
-/**
- * Main entry point — called by order actions and webhooks.
- * Uses order.notifyEmail if customer specified one at checkout,
- * otherwise falls back to their account email (order.user.email).
- */
+// ─────────────────────────────────────────────
+// Professional, branded subject lines
+// ─────────────────────────────────────────────
+function getEmailSubject(status: OrderStatus, orderRef: string): string {
+  switch (status) {
+    case "Accepted":
+      return `Order Confirmed — ${orderRef} | 3D Print with Sruthi`;
+    case "InProgress":
+      return `Your Order is Being Printed — ${orderRef} | 3D Print with Sruthi`;
+    case "Shipped":
+      return `Your Order Has Shipped — ${orderRef} | Track Your Package`;
+    case "Delivered":
+      return `Order Delivered — ${orderRef} | Thank You for Your Purchase`;
+    case "Rejected":
+      return `Order Update — ${orderRef} | 3D Print with Sruthi`;
+    default:
+      return `Order Status Update — ${orderRef} | 3D Print with Sruthi`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// Main export — called from order actions
+// ─────────────────────────────────────────────
 export async function sendOrderStatusEmail(
-  order: OrderWithItems & { notifyEmail?: string | null },
+  order: OrderWithItems,
   newStatus: OrderStatus,
   domain: string = process.env.NEXTAUTH_URL || "https://3dprintwithsruthi.in"
 ): Promise<{ ok: boolean; error?: string }> {
-  // No email needed when an order is first created (Pending)
+
+  // No email for newly created (Pending) orders
   if (newStatus === "Pending") {
-    console.log(`[Gmail] Skipping — status is Pending for order ${order.id}`);
+    console.log(`[Gmail] ⏭️  Skipping Pending email — order ${order.id}`);
     return { ok: true };
   }
 
-  // Determine recipient: notifyEmail from checkout form → account email
-  const recipientEmail = order.notifyEmail?.trim() || order.user?.email;
+  // Determine recipient: notifyEmail entered at checkout → account email as fallback
+  const recipientEmail =
+    (order.notifyEmail && order.notifyEmail.trim().length > 0)
+      ? order.notifyEmail.trim()
+      : order.user?.email;
+
   if (!recipientEmail) {
-    console.error(`[Gmail] No recipient found for order ${order.id}`);
-    return { ok: false, error: "No recipient email on order or user" };
+    console.error(`[Gmail] ❌ No recipient email for order ${order.id} — cannot send`);
+    return { ok: false, error: "No recipient email on order" };
   }
 
+  // Format the 3DPS order reference for use in subject + template
+  const orderRef = formatOrderNumber(
+    (order as any).orderNumber ?? null,
+    order.id
+  );
+
+  // Build subject and HTML body
+  const subject = getEmailSubject(newStatus, orderRef);
   let html: string;
-  let subject: string;
 
   switch (newStatus) {
     case "Accepted":
-      html = generateAcceptedEmail(order, domain);
-      subject = `✅ Order Confirmed: #${order.id.slice(-8)} — 3D Print with Sruthi`;
+      html = generateAcceptedEmail(order, domain, orderRef);
       break;
     case "InProgress":
-      html = generateInProgressEmail(order, domain);
-      subject = `🖨️ Your order #${order.id.slice(-8)} is being printed!`;
+      html = generateInProgressEmail(order, domain, orderRef);
       break;
     case "Shipped":
-      html = generateShippedEmail(order, domain);
-      subject = `🚚 Your order #${order.id.slice(-8)} has shipped!`;
+      html = generateShippedEmail(order, domain, orderRef);
       break;
     case "Delivered":
-      html = generateDeliveredEmail(order, domain);
-      subject = `📦 Delivered: Order #${order.id.slice(-8)} — Thank you!`;
+      html = generateDeliveredEmail(order, domain, orderRef);
       break;
     case "Rejected":
-      html = generateGenericStatusEmail(order, "Cancelled", domain);
-      subject = `Order #${order.id.slice(-8)} — Status Update`;
+      html = generateGenericStatusEmail(order, "Cancelled", domain, orderRef);
       break;
     default:
-      html = generateGenericStatusEmail(order, newStatus, domain);
-      subject = `Order #${order.id.slice(-8)} — Status: ${newStatus}`;
+      html = generateGenericStatusEmail(order, newStatus, domain, orderRef);
       break;
   }
 
   console.log(
-    `[Gmail] Dispatching status="${newStatus}" to "${recipientEmail}" for order ${order.id}`
+    `[Gmail] 📧 Dispatching: status="${newStatus}" | ref="${orderRef}" | to="${recipientEmail}"`
   );
   return sendGmail(recipientEmail, subject, html);
 }

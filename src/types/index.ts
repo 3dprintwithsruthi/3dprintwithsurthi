@@ -22,7 +22,7 @@ export interface ProductWithRelations extends Product {
   orderItems?: OrderItem[];
 }
 
-/** Order with items and user */
+/** Order with items and user (notifyEmail is included from Prisma schema) */
 export interface OrderWithItems extends Order {
   orderItems: (OrderItem & { product: Product })[];
   user: User;

@@ -23,3 +23,17 @@ export function decimalToNumber(value: unknown): number {
     return (value as { toNumber: () => number }).toNumber();
   return 0;
 }
+
+/**
+ * Formats a sequential order number into the branded 3DPS format.
+ * orderNumber 1 → 3DPS1001, 2 → 3DPS1002, etc.
+ * Falls back to last 8 chars of id if orderNumber is missing.
+ */
+export function formatOrderNumber(
+  orderNumber: number | null | undefined,
+  fallbackId?: string
+): string {
+  if (orderNumber) return `3DPS${1000 + orderNumber}`;
+  if (fallbackId) return `3DPS-${fallbackId.slice(-6).toUpperCase()}`;
+  return "3DPS----";
+}
