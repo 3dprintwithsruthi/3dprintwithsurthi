@@ -52,6 +52,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
     state: formData.get("state"),
     pincode: formData.get("pincode"),
     phone: formData.get("phone"),
+    notifyEmail: formData.get("notifyEmail") || "",
   };
   const addressParsed = addressSchema.safeParse(addressRaw);
   if (!addressParsed.success) {
@@ -126,6 +127,7 @@ export async function placeOrderAction(formData: FormData): Promise<OrderActionR
           discount: new Decimal(discount),
           couponCode: discount > 0 ? couponCode : null,
           address: addressStr,
+          notifyEmail: (addressParsed.data.notifyEmail || "").trim() || null,
           paymentMethod,
           paymentStatus: isAdminBypass ? "PAID" : "PENDING",
         },

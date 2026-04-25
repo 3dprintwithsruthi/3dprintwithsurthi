@@ -11,6 +11,7 @@ export const addressSchema = z.object({
   state: z.string().min(2, "State is required"),
   pincode: z.string().regex(/^\d{6}$/, "Pincode must be 6 digits"),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Valid 10-digit phone required"),
+  notifyEmail: z.string().email("Enter a valid email").optional().or(z.literal("")),
 });
 
 export type AddressInput = z.infer<typeof addressSchema>;

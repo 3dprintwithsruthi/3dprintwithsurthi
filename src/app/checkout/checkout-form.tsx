@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatPrice } from "@/lib/utils";
 import { validateCouponAction } from "@/app/actions/coupon";
-import { User, MapPin, Tag, CreditCard, ShieldCheck, Lock, Phone } from "lucide-react";
+import { User, MapPin, Tag, CreditCard, ShieldCheck, Lock, Phone, Mail } from "lucide-react";
 
 export function CheckoutForm() {
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +33,7 @@ export function CheckoutForm() {
       state: "",
       pincode: "",
       phone: "",
+      notifyEmail: "",
     },
   });
 
@@ -78,6 +79,7 @@ export function CheckoutForm() {
     formData.set("state", data.state);
     formData.set("pincode", data.pincode);
     formData.set("phone", data.phone);
+    formData.set("notifyEmail", data.notifyEmail ?? "");
     formData.set("cartJson", JSON.stringify(cartPayload));
 
     // Default to ONLINE based on the Cashfree Secure Payments mock
@@ -167,6 +169,27 @@ export function CheckoutForm() {
                 {form.formState.errors.phone && (
                   <p className="mt-1 text-xs text-red-500 font-medium">{form.formState.errors.phone.message}</p>
                 )}
+              </div>
+              <div>
+                <Label htmlFor="notifyEmail" className="text-sm font-semibold text-gray-700">
+                  Notification Email <span className="text-gray-400 font-normal">(Order status updates will be sent here)</span>
+                </Label>
+                <div className="relative mt-1.5">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <Input
+                    id="notifyEmail"
+                    type="email"
+                    className="pl-9 focus-visible:ring-violet-500 rounded-lg text-gray-900 h-11"
+                    placeholder="yourname@gmail.com"
+                    {...form.register("notifyEmail")}
+                  />
+                </div>
+                {form.formState.errors.notifyEmail && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">{form.formState.errors.notifyEmail.message}</p>
+                )}
+                <p className="mt-1.5 text-xs text-gray-400">We'll send you updates when your order is confirmed, shipped, and delivered.</p>
               </div>
             </div>
           </div>

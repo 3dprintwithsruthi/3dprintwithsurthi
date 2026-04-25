@@ -1,128 +1,154 @@
 /**
  * Email service – Google Gmail API with OAuth2
- * Sends production-ready HTML order status emails to customers
+ * Rebuilt for production reliability:
+ *  - Uses order.notifyEmail (customer-provided) OR order.user.email
+ *  - Exponential backoff retry (3 attempts)
+ *  - Detailed server logs for every send attempt
+ *  - Sends on all statuses except "Pending"
  */
 import { google } from "googleapis";
 import type { OrderStatus } from "@prisma/client";
 import type { OrderWithItems } from "@/types";
-import { 
-  generateAcceptedEmail, 
-  generateInProgressEmail, 
-  generateShippedEmail, 
-  generateDeliveredEmail, 
-  generateGenericStatusEmail 
+import {
+  generateAcceptedEmail,
+  generateInProgressEmail,
+  generateShippedEmail,
+  generateDeliveredEmail,
+  generateGenericStatusEmail,
 } from "./email-templates";
 
-// 1. Setup Gmail OAuth2 Client
-const OAuth2 = google.auth.OAuth2;
+function createGmailClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
-const createTransporter = () => {
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error(
+      `[Gmail] Missing OAuth2 env vars. Got: clientId=${!!clientId}, clientSecret=${!!clientSecret}, refreshToken=${!!refreshToken}`
+    );
+  }
+
+  const OAuth2 = google.auth.OAuth2;
   const oauth2Client = new OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+    clientId,
+    clientSecret,
     "https://developers.google.com/oauthplayground"
   );
-
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-  });
-
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
   return google.gmail({ version: "v1", auth: oauth2Client });
-};
+}
 
-function encodeMessage(message: string): string {
-  return Buffer.from(message, 'utf8')
+function encodeRawEmail(to: string, subject: string, html: string, from: string): string {
+  const raw = [
+    `From: "3D Print with Sruthi" <${from}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/html; charset=utf-8",
+    "",
+    html,
+  ].join("\r\n");
+
+  return Buffer.from(raw, "utf8")
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
 
-async function sendGmail(to: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> {
-  const SENDER_EMAIL = process.env.MAIL_FROM || process.env.SMTP_USER;
-  
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_REFRESH_TOKEN || !SENDER_EMAIL) {
-    console.warn("Gmail OAuth2 not fully configured. Missing ENV vars. Skipping email to", to);
-    return { ok: true };
+async function sendGmail(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ ok: boolean; error?: string }> {
+  const senderEmail = process.env.MAIL_FROM || process.env.SMTP_USER;
+
+  if (!senderEmail) {
+    console.warn("[Gmail] Skipping — MAIL_FROM / SMTP_USER not set");
+    return { ok: false, error: "MAIL_FROM not set" };
   }
 
-  // Proper raw MIME multi-part or direct HTML assembly
-  // To avoid boundary complexities for simple emails, we just use Content-Type text/html directly
-  const messageParts = [
-    "From: \"3D Print with Sruthi\" <" + SENDER_EMAIL + ">",
-    "To: " + to,
-    "Subject: " + subject,
-    "Content-Type: text/html; charset=utf-8",
-    "MIME-Version: 1.0",
-    "",
-    html
-  ].join("\r\n");
+  const encodedMessage = encodeRawEmail(to, subject, html, senderEmail);
 
-  const encodedMessage = encodeMessage(messageParts);
-
-  try {
-    const gmail = createTransporter();
-    
-    // Add simple retry logic (Requirement 6 Bonus)
-    let attempts = 0;
-    while (attempts < 3) {
-      try {
-        await gmail.users.messages.send({
-          userId: "me",
-          requestBody: {
-            raw: encodedMessage,
-          },
-        });
-        console.log("[Gmail Auto-Mailer] Successfully sent " + subject + " to " + to);
-        return { ok: true };
-      } catch (sendError: any) {
-        attempts++;
-        if (attempts >= 3) throw sendError;
-        // Exponential backoff
-        await new Promise((res) => setTimeout(res, 1000 * attempts));
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const gmail = createGmailClient();
+      await gmail.users.messages.send({
+        userId: "me",
+        requestBody: { raw: encodedMessage },
+      });
+      console.log(`[Gmail] ✅ Sent "${subject}" → ${to} (attempt ${attempt})`);
+      return { ok: true };
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      console.error(`[Gmail] ❌ Attempt ${attempt}/${MAX_ATTEMPTS} failed for ${to}: ${msg}`);
+      if (attempt === MAX_ATTEMPTS) {
+        return { ok: false, error: msg };
       }
+      // Exponential backoff: 1s → 2s → 4s
+      await new Promise((res) => setTimeout(res, 1000 * Math.pow(2, attempt - 1)));
     }
-    return { ok: true };
-  } catch (e: any) {
-    const errorMsg = e.message || "Unknown Gmail API error";
-    console.error("[Gmail Auto-Mailer] Critical Failure:", errorMsg);
-    return { ok: false, error: errorMsg };
   }
+
+  return { ok: false, error: "Max retries exceeded" };
 }
 
+/**
+ * Main entry point — called by order actions and webhooks.
+ * Uses order.notifyEmail if customer specified one at checkout,
+ * otherwise falls back to their account email (order.user.email).
+ */
 export async function sendOrderStatusEmail(
-  order: OrderWithItems,
+  order: OrderWithItems & { notifyEmail?: string | null },
   newStatus: OrderStatus,
   domain: string = process.env.NEXTAUTH_URL || "https://3dprintwithsruthi.in"
 ): Promise<{ ok: boolean; error?: string }> {
-  
-  let html = "";
-  let subject = "Order #" + order.id.slice(-8) + " – Status: " + newStatus;
+  // No email needed when an order is first created (Pending)
+  if (newStatus === "Pending") {
+    console.log(`[Gmail] Skipping — status is Pending for order ${order.id}`);
+    return { ok: true };
+  }
 
-  switch(newStatus) {
+  // Determine recipient: notifyEmail from checkout form → account email
+  const recipientEmail = order.notifyEmail?.trim() || order.user?.email;
+  if (!recipientEmail) {
+    console.error(`[Gmail] No recipient found for order ${order.id}`);
+    return { ok: false, error: "No recipient email on order or user" };
+  }
+
+  let html: string;
+  let subject: string;
+
+  switch (newStatus) {
     case "Accepted":
       html = generateAcceptedEmail(order, domain);
-      subject = "Order Confirmed: #" + order.id.slice(-8);
+      subject = `✅ Order Confirmed: #${order.id.slice(-8)} — 3D Print with Sruthi`;
       break;
     case "InProgress":
       html = generateInProgressEmail(order, domain);
-      subject = "We are preparing your order #" + order.id.slice(-8);
+      subject = `🖨️ Your order #${order.id.slice(-8)} is being printed!`;
       break;
     case "Shipped":
       html = generateShippedEmail(order, domain);
-      subject = "Your 3D order #" + order.id.slice(-8) + " has shipped!";
+      subject = `🚚 Your order #${order.id.slice(-8)} has shipped!`;
       break;
     case "Delivered":
       html = generateDeliveredEmail(order, domain);
-      subject = "Delivered: Order #" + order.id.slice(-8);
+      subject = `📦 Delivered: Order #${order.id.slice(-8)} — Thank you!`;
+      break;
+    case "Rejected":
+      html = generateGenericStatusEmail(order, "Cancelled", domain);
+      subject = `Order #${order.id.slice(-8)} — Status Update`;
       break;
     default:
       html = generateGenericStatusEmail(order, newStatus, domain);
+      subject = `Order #${order.id.slice(-8)} — Status: ${newStatus}`;
       break;
   }
 
-  // Prevent spamming empty Pending emails
-  if (newStatus === "Pending") return { ok: true };
-
-  return sendGmail(order.user.email, subject, html);
+  console.log(
+    `[Gmail] Dispatching status="${newStatus}" to "${recipientEmail}" for order ${order.id}`
+  );
+  return sendGmail(recipientEmail, subject, html);
 }
