@@ -109,17 +109,17 @@ async function sendGmail(
 function getEmailSubject(status: OrderStatus, orderRef: string): string {
   switch (status) {
     case "Accepted":
-      return `Order Confirmed — ${orderRef} | 3D Print with Sruthi`;
+      return `Order Confirmed - ${orderRef} | 3D Print with Sruthi`;
     case "InProgress":
-      return `Your Order is Being Printed — ${orderRef} | 3D Print with Sruthi`;
+      return `Your Order is Begin to Print - ${orderRef} | 3D Print with Sruthi`;
     case "Shipped":
-      return `Your Order Has Shipped — ${orderRef} | Track Your Package`;
+      return `Your Order Has Shipped - ${orderRef} | Track Your Package`;
     case "Delivered":
-      return `Order Delivered — ${orderRef} | Thank You for Your Purchase`;
+      return `Order Delivered - ${orderRef} | Thank You for Your Purchase`;
     case "Rejected":
-      return `Order Update — ${orderRef} | 3D Print with Sruthi`;
+      return `Order Update - ${orderRef} | 3D Print with Sruthi`;
     default:
-      return `Order Status Update — ${orderRef} | 3D Print with Sruthi`;
+      return `Order Status Update - ${orderRef} | 3D Print with Sruthi`;
   }
 }
 
